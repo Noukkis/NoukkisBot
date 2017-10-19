@@ -25,6 +25,8 @@ package noukkisBot.wrks.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import java.text.DecimalFormat;
+import java.util.Timer;
+import java.util.TimerTask;
 import net.dv8tion.jda.core.entities.Message;
 import noukkisBot.helpers.Help;
 
@@ -35,17 +37,28 @@ import noukkisBot.helpers.Help;
 public class VisualPlayer {
 
     private final static DecimalFormat DF = new DecimalFormat("00");
+    private final static String LINE_CHAR = "⹀";
+    private final static String RADIO_BUTTON = "🔘";
+    private final static int RADIO_BUTTON_SIZE = 7;
 
     private Message msg;
     private final TrackManager tm;
+    private Timer timer;
 
     public VisualPlayer(Message msg, TrackManager tm) {
         this.msg = msg;
         this.tm = tm;
+        this.timer = new Timer();
         Help.RBM.addReactionButton(msg, "⏹", (event) -> tm.clear());
         Help.RBM.addReactionButton(msg, "⏯", (event) -> tm.pauseStart());
         Help.RBM.addReactionButton(msg, "⏭", (event) -> tm.nextTrack());
         Help.RBM.addReactionButton(msg, "🔀", (event) -> tm.shuffle());
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                update();
+            }
+        }, 5000, 2000);
     }
 
     public void update() {
@@ -53,35 +66,43 @@ public class VisualPlayer {
             AudioTrack cur = tm.getAudioPlayer().getPlayingTrack();
             String update = "No current track";
             if (cur != null) {
-                update = "";
+                String playing = tm.getAudioPlayer().isPaused() ? "⏸" : "▶";
+                update = playing + " **Currently Playing : **" + cur.getInfo().title
+                        + " " + time(cur.getPosition(), cur.getDuration());
                 if (!tm.getQueue().isEmpty()) {
-                    update += "**Queue**\n```Markdown";
+                    update += "\n\n**Queue**\n```Markdown";
                     int i = 1;
                     for (AudioTrack track : tm.getQueue()) {
                         update += "\n" + i + ". " + track.getInfo().title;
                         i++;
                         if (i > 5) {
                             int more = (tm.getQueue().size() - 5);
-                            if(more > 0) {
-                            update += "\n\tand " + more + " more...";
+                            if (more > 0) {
+                                update += "\n\tand " + more + " more...";
                             }
                             break;
                         }
                     }
-                    update += "\n```\n";
+                    update += "\n```";
                 }
-                update += "**Currently Playing : **" + cur.getInfo().title;
-                int durM = (int) ((cur.getDuration() / 1000) / 60);
-                int durS = (int) ((cur.getDuration() / 1000) % 60);
 
             }
             msg.editMessage(update).queue();
         }
     }
 
+    private String time(long pos, long dur) {
+        int posM = (int) ((pos / 1000) / 60);
+        int posS = (int) ((pos / 1000) % 60);
+        int durM = (int) ((dur / 1000) / 60);
+        int durS = (int) ((dur / 1000) % 60);
+        return " [" + DF.format(posM) + ":" + DF.format(posS) + " / "
+                + DF.format(durM) + ":" + DF.format(durS) + "]";
+    }
+
     public void stop() {
         msg.delete().queue();
-        msg = null;
+        timer.cancel();
     }
 
 }

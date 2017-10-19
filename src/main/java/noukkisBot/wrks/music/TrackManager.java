@@ -85,6 +85,7 @@ public class TrackManager extends AudioEventAdapter {
 
     public void pauseStart() {
         ap.setPaused(!ap.isPaused());
+        vp.update();
     }
 
     public void nextTrack() {
@@ -104,6 +105,11 @@ public class TrackManager extends AudioEventAdapter {
 
     public void setVisualPlayer(VisualPlayer vp) {
         this.vp = vp;
+    }
+
+    void stop() {
+        clear();
+        vp.stop();
     }
 
 }
