@@ -67,13 +67,9 @@ public class Clear extends Command {
             return msgs;
         }
         if (x < 100) {
-            for (Message msg : h.retrievePast(x).complete()) {
-                msgs.add(msg);
-            }
+            msgs.addAll(h.retrievePast(x).complete());
         } else {
-            for (Message msg : h.retrievePast(100).complete()) {
-                msgs.add(msg);
-            }
+            msgs.addAll(h.retrievePast(100).complete());
             msgs.addAll(delete(x - 100, h));
         }
         return msgs;

@@ -27,24 +27,24 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import java.util.Collections;
 import java.util.LinkedList;
-import java.util.Queue;
 
 /**
  *
  * @author Noukkis
  */
-public class TrackScheduler extends AudioEventAdapter {
+public class TrackManager extends AudioEventAdapter {
 
     private final AudioPlayer ap;
-    private final Queue<AudioTrack> queue;
+    private VisualPlayer vp;
+    private final LinkedList<AudioTrack> queue;
 
-    public TrackScheduler(AudioPlayer ap) {
-        super();
+    public TrackManager(AudioPlayer ap) {
         this.ap = ap;
         this.queue = new LinkedList<>();
     }
-    
+
     public void clear() {
         queue.clear();
         ap.stopTrack();
@@ -53,10 +53,14 @@ public class TrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext) {
-            if(!queue.isEmpty()) {
-                player.playTrack(queue.poll());
-            }
+            nextTrack();
         }
+        vp.update();
+    }
+
+    @Override
+    public void onTrackStart(AudioPlayer player, AudioTrack track) {
+        vp.update();
     }
 
     public void queue(AudioTrack track) {
@@ -75,8 +79,31 @@ public class TrackScheduler extends AudioEventAdapter {
         return ap;
     }
 
-    public Queue<AudioTrack> getQueue() {
+    public LinkedList<AudioTrack> getQueue() {
         return queue;
+    }
+
+    public void pauseStart() {
+        ap.setPaused(!ap.isPaused());
+    }
+
+    public void nextTrack() {
+        if (!queue.isEmpty()) {
+            ap.playTrack(queue.poll());
+        }
+    }
+
+    public void shuffle() {
+        Collections.shuffle(queue);
+        vp.update();
+    }
+
+    public VisualPlayer getVisualPlayer() {
+        return vp;
+    }
+
+    public void setVisualPlayer(VisualPlayer vp) {
+        this.vp = vp;
     }
 
 }

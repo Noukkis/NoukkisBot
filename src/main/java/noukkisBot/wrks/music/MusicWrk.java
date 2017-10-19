@@ -24,7 +24,6 @@
 package noukkisBot.wrks.music;
 
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -34,6 +33,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 
@@ -47,9 +48,8 @@ public class MusicWrk {
     public static final AudioPlayerManager APM = new DefaultAudioPlayerManager();
 
     private final Guild guild;
-    private VisualPlayer vp;
     private final AudioPlayer ap;
-    private final TrackScheduler ts;
+    private final TrackManager tm;
 
     public static MusicWrk getInstance(Guild guild) {
         if (!INSTANCES.containsKey(guild)) {
@@ -61,8 +61,8 @@ public class MusicWrk {
     public MusicWrk(Guild guild) {
         this.guild = guild;
         this.ap = APM.createPlayer();
-        this.ts = new TrackScheduler(ap);
-        ap.addListener(ts);
+        this.tm = new TrackManager(ap);
+        ap.addListener(tm);
         guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(ap));
     }
 
@@ -80,8 +80,7 @@ public class MusicWrk {
     public boolean disconnect() {
         if (guild.getSelfMember().getVoiceState().inVoiceChannel()) {
             guild.getAudioManager().closeAudioConnection();
-            vp.stop();
-            vp = null;
+            tm.clear();
             return true;
         }
         return false;
@@ -96,16 +95,18 @@ public class MusicWrk {
             APM.loadItem(event.getArgs(), new AudioLoadResultHandler() {
                 @Override
                 public void trackLoaded(AudioTrack track) {
-                    ts.queue(track);
+                    tm.queue(track);
                     event.reactSuccess();
+                    tm.getVisualPlayer().update();
                 }
 
                 @Override
                 public void playlistLoaded(AudioPlaylist playlist) {
                     for (AudioTrack track : playlist.getTracks()) {
-                        ts.queue(track);
+                        tm.queue(track);
                     }
                     event.reactSuccess();
+                    tm.getVisualPlayer().update();
                 }
 
                 @Override
@@ -121,12 +122,17 @@ public class MusicWrk {
         } else {
             event.reactWarning();
         }
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                event.getMessage().delete().queue();
+            }
+        }, 2000);
     }
 
     public void createVisualPlayer(CommandEvent event) {
-        event.getMessage().getTextChannel().sendMessage("Joined" + event.getClient().getSuccess()).queue((msg) -> {
-            vp = new VisualPlayer(msg, ts);
-            vp.start();
+        event.replySuccess("Joined", (msg) -> {
+            tm.setVisualPlayer(new VisualPlayer(msg, tm));
         });
     }
 }

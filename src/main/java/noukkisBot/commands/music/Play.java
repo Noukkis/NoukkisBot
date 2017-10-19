@@ -25,6 +25,7 @@ package noukkisBot.commands.music;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
+import net.dv8tion.jda.core.Permission;
 import noukkisBot.wrks.music.MusicWrk;
 
 /**
@@ -37,6 +38,7 @@ public class Play extends Command {
         this.name = "play";
         this.arguments = "<link>";
         this.help = "play the music";
+        this.botPermissions = new Permission[]{Permission.MESSAGE_MANAGE};
         this.category = new Category("Music");
     }
 

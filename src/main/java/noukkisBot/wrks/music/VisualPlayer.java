@@ -24,59 +24,64 @@
 package noukkisBot.wrks.music;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import java.util.Timer;
-import java.util.TimerTask;
-import lombok.RequiredArgsConstructor;
+import java.text.DecimalFormat;
 import net.dv8tion.jda.core.entities.Message;
+import noukkisBot.helpers.Help;
 
 /**
  *
  * @author Noukkis
  */
-@RequiredArgsConstructor
 public class VisualPlayer {
 
-    private final Message msg;
-    private final TrackScheduler ts;
-    private boolean running;
+    private final static DecimalFormat DF = new DecimalFormat("00");
 
-    public void start() {
-        running = true;
-        new Thread(() -> {
-            while (running) {
-                update();
-            }
-        }).start();
+    private Message msg;
+    private final TrackManager tm;
+
+    public VisualPlayer(Message msg, TrackManager tm) {
+        this.msg = msg;
+        this.tm = tm;
+        Help.RBM.addReactionButton(msg, "⏹", (event) -> tm.clear());
+        Help.RBM.addReactionButton(msg, "⏯", (event) -> tm.pauseStart());
+        Help.RBM.addReactionButton(msg, "⏭", (event) -> tm.nextTrack());
+        Help.RBM.addReactionButton(msg, "🔀", (event) -> tm.shuffle());
     }
 
-    private void update() {
-        AudioTrack cur = ts.getAudioPlayer().getPlayingTrack();
-        String update = msg.getContent();
-        if (cur != null) {
-            update = "**Currently Playing :**" + cur.getInfo().title;
-            int posM = (int) ((cur.getPosition() / 1000) / 60);
-            int posS = (int) ((cur.getPosition() / 1000) % 60);
-            int durM = (int) ((cur.getDuration() / 1000) / 60);
-            int durS = (int) ((cur.getDuration() / 1000) % 60);
-            update += "(" + posM + ":" + posS + " / " + durM + ":" + durS + ")";
-            if (!ts.getQueue().isEmpty()) {
-                update += "\n**Queue**\n```Java";
-                int i = 1;
-                for (AudioTrack track : ts.getQueue()) {
-                    update += "\n" + i + ". " + track.getInfo().title;
-                    i++;
-                    if (i > 5) {
-                        update += "\n```";
-                        break;
+    public void update() {
+        if (msg != null) {
+            AudioTrack cur = tm.getAudioPlayer().getPlayingTrack();
+            String update = "No current track";
+            if (cur != null) {
+                update = "";
+                if (!tm.getQueue().isEmpty()) {
+                    update += "**Queue**\n```Markdown";
+                    int i = 1;
+                    for (AudioTrack track : tm.getQueue()) {
+                        update += "\n" + i + ". " + track.getInfo().title;
+                        i++;
+                        if (i > 5) {
+                            int more = (tm.getQueue().size() - 5);
+                            if(more > 0) {
+                            update += "\n\tand " + more + " more...";
+                            }
+                            break;
+                        }
                     }
+                    update += "\n```\n";
                 }
+                update += "**Currently Playing : **" + cur.getInfo().title;
+                int durM = (int) ((cur.getDuration() / 1000) / 60);
+                int durS = (int) ((cur.getDuration() / 1000) % 60);
+
             }
+            msg.editMessage(update).queue();
         }
-        msg.editMessage(update).queue();
     }
 
     public void stop() {
-        running = false;
+        msg.delete().queue();
+        msg = null;
     }
 
 }

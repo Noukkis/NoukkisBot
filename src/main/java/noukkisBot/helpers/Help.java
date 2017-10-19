@@ -28,7 +28,6 @@ import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandClient;
 import com.jagrosh.jdautilities.commandclient.CommandClientBuilder;
 import com.jagrosh.jdautilities.commandclient.examples.AboutCommand;
-import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import java.awt.Color;
 import java.io.FileReader;
@@ -44,6 +43,7 @@ import java.util.Set;
 import lombok.experimental.UtilityClass;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.User;
+import noukkisBot.wrks.ReactionButtonsMaker;
 import noukkisBot.wrks.music.MusicWrk;
 import org.reflections.Reflections;
 
@@ -57,7 +57,7 @@ public class Help {
     private final String PROPS_FILE = "bot.conf";
     private final String COMMANDS_PACKAGE = "noukkisBot.commands";
 
-    public final EventWaiter EVENT_WAITER = new EventWaiter();
+    public final ReactionButtonsMaker RBM = new ReactionButtonsMaker();
     public final String YES_REACT = "\uD83D\uDC4D";
     public final String NO_REACT = "\uD83D\uDC4E";
     public final String[] NUMBERS_REACTS = {"0\u20E3", "1\u20E3", "2\u20E3",

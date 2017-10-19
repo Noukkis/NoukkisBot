@@ -46,7 +46,7 @@ public class Main {
         new JDABuilder(AccountType.BOT)
                 .setToken(Help.BOT_TOKEN)
                 .setGame(Game.of("loading..."))
-                .addEventListener(Help.EVENT_WAITER)
+                .addEventListener(Help.RBM)
                 .addEventListener(ccb.build())
                 .buildAsync();
     }
