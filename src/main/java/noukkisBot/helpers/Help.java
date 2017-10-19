@@ -42,6 +42,7 @@ import java.util.Properties;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.User;
 import noukkisBot.wrks.ReactionButtonsMaker;
 import noukkisBot.wrks.music.MusicWrk;
@@ -98,16 +99,23 @@ public class Help {
             String help = "**" + event.getSelfUser().getName() + "** commands:";
             String prefix = cc.getPrefix();
             Map<String, List<Command>> commands = new LinkedHashMap<>();
+            ArrayList<String> roles = new ArrayList<>();
+            for (Role role : event.getMember().getRoles()) {
+                roles.add(role.getName());
+            }
             List<Command> others = new ArrayList<>();
             for (Command command : cc.getCommands()) {
-                Category category = command.getCategory();
-                if (category != null) {
-                    if (!commands.containsKey(category.getName())) {
-                        commands.put(category.getName(), new ArrayList<>());
+                if (!(command.isOwnerCommand() && !cc.getOwnerId().equals(event.getAuthor().getId()))
+                        && (command.getRequiredRole() == null || roles.contains(command.getRequiredRole()))) {
+                    Category category = command.getCategory();
+                    if (category != null) {
+                        if (!commands.containsKey(category.getName())) {
+                            commands.put(category.getName(), new ArrayList<>());
+                        }
+                        commands.get(category.getName()).add(command);
+                    } else {
+                        others.add(command);
                     }
-                    commands.get(category.getName()).add(command);
-                } else {
-                    others.add(command);
                 }
             }
             commands.put("Others", others);
