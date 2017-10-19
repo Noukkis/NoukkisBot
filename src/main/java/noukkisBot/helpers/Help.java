@@ -34,6 +34,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -99,14 +101,9 @@ public class Help {
             String help = "**" + event.getSelfUser().getName() + "** commands:";
             String prefix = cc.getPrefix();
             Map<String, List<Command>> commands = new LinkedHashMap<>();
-            ArrayList<String> roles = new ArrayList<>();
-            for (Role role : event.getMember().getRoles()) {
-                roles.add(role.getName());
-            }
             List<Command> others = new ArrayList<>();
             for (Command command : cc.getCommands()) {
-                if (!(command.isOwnerCommand() && !cc.getOwnerId().equals(event.getAuthor().getId()))
-                        && (command.getRequiredRole() == null || roles.contains(command.getRequiredRole()))) {
+                if (!(command.isOwnerCommand() && !cc.getOwnerId().equals(event.getAuthor().getId()))) {
                     Category category = command.getCategory();
                     if (category != null) {
                         if (!commands.containsKey(category.getName())) {
@@ -121,6 +118,9 @@ public class Help {
             commands.put("Others", others);
             for (String category : commands.keySet()) {
                 help += "\n\n__" + category + "__\n";
+                Collections.sort(commands.get(category), (o1, o2) -> {
+                    return o1.getName().compareTo(o2.getName());
+                });
                 for (Command command : commands.get(category)) {
                     help += "\n`" + prefix + command.getName()
                             + (command.getArguments() != null ? " " + command.getArguments() : "")
