@@ -45,7 +45,7 @@ public class Leave extends Command {
         if(wrk.disconnect()) {
             event.reactSuccess();
         } else {
-            event.reactWarning();
+            event.reactError();
         }
     }
 
