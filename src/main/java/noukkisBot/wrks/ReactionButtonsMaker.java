@@ -44,7 +44,7 @@ public class ReactionButtonsMaker implements EventListener {
         map = new HashMap<>();
     }
 
-    public void addReactionButton(Message msg, String name, Consumer<GenericMessageReactionEvent> consumer) {
+    public void add(Message msg, String name, Consumer<GenericMessageReactionEvent> consumer) {
         msg.addReaction(name).queue();
         if (!map.containsKey(msg.getId())) {
             map.put(msg.getId(), new HashMap<>());

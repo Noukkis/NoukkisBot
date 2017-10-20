@@ -21,32 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.music;
+package noukkisBot.wrks.music.visualPlayer;
 
-import com.jagrosh.jdautilities.commandclient.Command;
-import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import noukkisBot.wrks.music.MusicWrk;
+import java.text.DecimalFormat;
+import net.dv8tion.jda.core.entities.TextChannel;
 
 /**
  *
  * @author Noukkis
  */
-public class Join extends Command {
+public abstract class VisualPlayer {
+    
+    private final static DecimalFormat DF = new DecimalFormat("00");
 
-    public Join() {
-        this.name = "join";
-        this.help = "Join your voice channel";
-        this.category = new Category("Music");
+    public abstract void update();
+
+    public abstract void delete();
+
+    public abstract TextChannel getChannel();
+
+    protected String time(long pos, long dur) {
+        int posM = (int) ((pos / 1000) / 60);
+        int posS = (int) ((pos / 1000) % 60);
+        int durM = (int) ((dur / 1000) / 60);
+        int durS = (int) ((dur / 1000) % 60);
+        return " [" + DF.format(posM) + ":" + DF.format(posS) + " / "
+                + DF.format(durM) + ":" + DF.format(durS) + "]";
     }
-
-    @Override
-    protected void execute(CommandEvent event) {
-        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        if(wrk.connect(event.getMember().getVoiceState().getChannel())) {
-            wrk.createMessageVisualPlayer(event, "Joined");
-        } else {
-            event.reactError();
-        }
-    }
-
 }

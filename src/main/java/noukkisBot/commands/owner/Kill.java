@@ -25,6 +25,7 @@ package noukkisBot.commands.owner;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
+import noukkisBot.wrks.music.MusicWrk;
 
 /**
  *
@@ -45,6 +46,7 @@ public class Kill extends Command {
     protected void execute(CommandEvent event) {
         event.reactSuccess();
         System.out.println("Killed by command");
+        MusicWrk.kill();
         event.getJDA().shutdown();
     }
 

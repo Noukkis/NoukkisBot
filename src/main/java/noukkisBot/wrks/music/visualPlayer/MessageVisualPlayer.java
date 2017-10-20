@@ -21,53 +21,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.wrks.music;
+package noukkisBot.wrks.music.visualPlayer;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import java.text.DecimalFormat;
-import java.util.Timer;
-import java.util.TimerTask;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.TextChannel;
 import noukkisBot.helpers.Help;
+import noukkisBot.wrks.music.TrackManager;
 
 /**
  *
  * @author Noukkis
  */
-public class VisualPlayer {
+public class MessageVisualPlayer extends VisualPlayer {
 
-    private final static DecimalFormat DF = new DecimalFormat("00");
-    private final static String LINE_CHAR = "⹀";
-    private final static String RADIO_BUTTON = "🔘";
-    private final static int RADIO_BUTTON_SIZE = 7;
+    
 
     private Message msg;
-    private final TrackManager tm;
-    private Timer timer;
+    protected final TrackManager tm;
 
-    public VisualPlayer(Message msg, TrackManager tm) {
+    public MessageVisualPlayer(Message msg, TrackManager tm) {
         this.msg = msg;
         this.tm = tm;
-        this.timer = new Timer();
-        Help.RBM.addReactionButton(msg, "⏹", (event) -> tm.clear());
-        Help.RBM.addReactionButton(msg, "⏯", (event) -> tm.pauseStart());
-        Help.RBM.addReactionButton(msg, "⏭", (event) -> tm.nextTrack());
-        Help.RBM.addReactionButton(msg, "🔀", (event) -> tm.shuffle());
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                update();
-            }
-        }, 5000, 2000);
+        Help.RBM.add(msg, "⏹", (event) -> tm.clear());
+        Help.RBM.add(msg, "⏯", (event) -> tm.pauseStart());
+        Help.RBM.add(msg, "⏭", (event) -> tm.nextTrack());
+        Help.RBM.add(msg, "🔀", (event) -> tm.shuffle());
     }
 
+    @Override
     public void update() {
         if (msg != null) {
             AudioTrack cur = tm.getAudioPlayer().getPlayingTrack();
             String update = "No current track";
             if (cur != null) {
                 String playing = tm.getAudioPlayer().isPaused() ? "⏸" : "▶";
-                update = playing + " **Currently Playing : **" + cur.getInfo().title
+                update = playing + "\t" + cur.getInfo().title
                         + " " + time(cur.getPosition(), cur.getDuration());
                 if (!tm.getQueue().isEmpty()) {
                     update += "\n\n**Queue**\n```Markdown";
@@ -91,18 +80,14 @@ public class VisualPlayer {
         }
     }
 
-    private String time(long pos, long dur) {
-        int posM = (int) ((pos / 1000) / 60);
-        int posS = (int) ((pos / 1000) % 60);
-        int durM = (int) ((dur / 1000) / 60);
-        int durS = (int) ((dur / 1000) % 60);
-        return " [" + DF.format(posM) + ":" + DF.format(posS) + " / "
-                + DF.format(durM) + ":" + DF.format(durS) + "]";
+    @Override
+    public void delete() {
+        msg.delete().queue();
     }
 
-    public void stop() {
-        msg.delete().queue();
-        timer.cancel();
+    @Override
+    public TextChannel getChannel() {
+        return msg.getTextChannel();
     }
 
 }

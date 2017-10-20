@@ -23,6 +23,7 @@
  */
 package noukkisBot.wrks.music;
 
+import noukkisBot.wrks.music.visualPlayer.MessageVisualPlayer;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -37,6 +38,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.VoiceChannel;
+import noukkisBot.wrks.music.visualPlayer.TopicVisualPlayer;
 
 /**
  *
@@ -46,6 +48,12 @@ public class MusicWrk {
 
     public static final Map<Guild, MusicWrk> INSTANCES = new HashMap<>();
     public static final AudioPlayerManager APM = new DefaultAudioPlayerManager();
+
+    public static void kill() {
+        for (MusicWrk wrk : INSTANCES.values()) {
+            wrk.disconnect();
+        }
+    }
 
     private final Guild guild;
     private final AudioPlayer ap;
@@ -80,7 +88,7 @@ public class MusicWrk {
     public boolean disconnect() {
         if (guild.getSelfMember().getVoiceState().inVoiceChannel()) {
             guild.getAudioManager().closeAudioConnection();
-            tm.clear();
+            tm.stop();
             return true;
         }
         return false;
@@ -130,9 +138,18 @@ public class MusicWrk {
         }, 2000);
     }
 
-    public void createVisualPlayer(CommandEvent event) {
-        event.replySuccess("Joined", (msg) -> {
-            tm.setVisualPlayer(new VisualPlayer(msg, tm));
+    public void createMessageVisualPlayer(CommandEvent event, String reply) {
+        event.replySuccess(reply, (msg) -> {
+            deleteMessageVisualPlayer();
+            tm.setVisualPlayer(new MessageVisualPlayer(msg, tm));
         });
+    }
+
+    public void deleteMessageVisualPlayer() {
+        tm.deleteMessageVisualPlayer();
+    }
+
+    public void topicVisualPlayer(CommandEvent event) {
+        tm.setVisualPlayer(new TopicVisualPlayer(event.getMessage(), tm));
     }
 }

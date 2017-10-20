@@ -29,6 +29,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import java.util.Collections;
 import java.util.LinkedList;
+import noukkisBot.wrks.music.visualPlayer.VisualPlayer;
+import noukkisBot.wrks.music.visualPlayer.VisualPlayerWrapper;
 
 /**
  *
@@ -37,12 +39,13 @@ import java.util.LinkedList;
 public class TrackManager extends AudioEventAdapter {
 
     private final AudioPlayer ap;
-    private VisualPlayer vp;
+    private VisualPlayerWrapper vpw;
     private final LinkedList<AudioTrack> queue;
 
     public TrackManager(AudioPlayer ap) {
         this.ap = ap;
         this.queue = new LinkedList<>();
+        this.vpw = new VisualPlayerWrapper();
     }
 
     public void clear() {
@@ -55,12 +58,12 @@ public class TrackManager extends AudioEventAdapter {
         if (endReason.mayStartNext) {
             nextTrack();
         }
-        vp.update();
+        vpw.update();
     }
 
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        vp.update();
+        vpw.update();
     }
 
     public void queue(AudioTrack track) {
@@ -85,7 +88,7 @@ public class TrackManager extends AudioEventAdapter {
 
     public void pauseStart() {
         ap.setPaused(!ap.isPaused());
-        vp.update();
+        vpw.update();
     }
 
     public void nextTrack() {
@@ -96,20 +99,24 @@ public class TrackManager extends AudioEventAdapter {
 
     public void shuffle() {
         Collections.shuffle(queue);
-        vp.update();
+        vpw.update();
     }
 
     public VisualPlayer getVisualPlayer() {
-        return vp;
+        return vpw;
+    }
+
+    void deleteMessageVisualPlayer() {
+        vpw.deleteMessage();
     }
 
     public void setVisualPlayer(VisualPlayer vp) {
-        this.vp = vp;
+        vpw.set(vp);
     }
 
     void stop() {
         clear();
-        vp.stop();
+        vpw.delete();
     }
 
 }
