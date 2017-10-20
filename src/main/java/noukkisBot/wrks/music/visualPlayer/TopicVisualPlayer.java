@@ -55,8 +55,8 @@ public class TopicVisualPlayer extends VisualPlayer {
             AudioTrack cur = tm.getAudioPlayer().getPlayingTrack();
             String update = "No current track";
             if(cur != null) {
-                String playing = tm.getAudioPlayer().isPaused() ? "⏸" : "▶";
-                update = playing + "\t**" + cur.getInfo().title + time(cur.getPosition(), cur.getDuration());
+                String playing = (tm.getAudioPlayer().isPaused() ? "⏸" : "▶") + "\t";
+                update = playing  + cur.getInfo().title + time(cur.getPosition(), cur.getDuration());
             }
             channel.getManager().setTopic(update).queue();
         }

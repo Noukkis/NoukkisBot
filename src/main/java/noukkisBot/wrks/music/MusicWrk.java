@@ -46,14 +46,8 @@ import noukkisBot.wrks.music.visualPlayer.TopicVisualPlayer;
  */
 public class MusicWrk {
 
-    public static final Map<Guild, MusicWrk> INSTANCES = new HashMap<>();
+    private static final Map<Guild, MusicWrk> INSTANCES = new HashMap<>();
     public static final AudioPlayerManager APM = new DefaultAudioPlayerManager();
-
-    public static void kill() {
-        for (MusicWrk wrk : INSTANCES.values()) {
-            wrk.disconnect();
-        }
-    }
 
     private final Guild guild;
     private final AudioPlayer ap;
@@ -64,6 +58,12 @@ public class MusicWrk {
             INSTANCES.put(guild, new MusicWrk(guild));
         }
         return INSTANCES.get(guild);
+    }
+
+    public static void kill() {
+        for (MusicWrk wrk : INSTANCES.values()) {
+            wrk.disconnect();
+        }
     }
 
     public MusicWrk(Guild guild) {
@@ -152,4 +152,8 @@ public class MusicWrk {
     public void topicVisualPlayer(CommandEvent event) {
         tm.setVisualPlayer(new TopicVisualPlayer(event.getMessage(), tm));
     }
+
+    public TrackManager getTrackManager() {
+        return tm;
+    }    
 }

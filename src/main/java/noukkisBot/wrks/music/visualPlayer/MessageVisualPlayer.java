@@ -44,7 +44,7 @@ public class MessageVisualPlayer extends VisualPlayer {
         this.msg = msg;
         this.tm = tm;
         Help.RBM.add(msg, "⏹", (event) -> tm.clear());
-        Help.RBM.add(msg, "⏯", (event) -> tm.pauseStart());
+        Help.RBM.add(msg, "⏯", (event) -> tm.pauseContinue());
         Help.RBM.add(msg, "⏭", (event) -> tm.nextTrack());
         Help.RBM.add(msg, "🔀", (event) -> tm.shuffle());
     }

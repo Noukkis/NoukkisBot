@@ -64,8 +64,8 @@ public class Player extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-        MusicWrk wrk = MusicWrk.INSTANCES.get(event.getGuild());
-        if (event.getArgs().matches("[c|t|x]+") && wrk != null) {
+        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
+        if (event.getArgs().matches("[c|t|x]+") && wrk.isConnected()) {
             if (event.getArgs().contains("c")) {
                 wrk.createMessageVisualPlayer(event, "Created");
             }

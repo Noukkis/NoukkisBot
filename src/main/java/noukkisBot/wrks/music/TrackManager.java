@@ -86,7 +86,7 @@ public class TrackManager extends AudioEventAdapter {
         return queue;
     }
 
-    public void pauseStart() {
+    public void pauseContinue() {
         ap.setPaused(!ap.isPaused());
         vpw.update();
     }
@@ -114,7 +114,7 @@ public class TrackManager extends AudioEventAdapter {
         vpw.set(vp);
     }
 
-    void stop() {
+    public void stop() {
         clear();
         vpw.delete();
     }
