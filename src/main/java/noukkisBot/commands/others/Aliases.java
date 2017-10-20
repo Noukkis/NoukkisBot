@@ -25,54 +25,49 @@ package noukkisBot.commands.others;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageHistory;
+import java.util.Map;
+import noukkisBot.helpers.Help;
 
 /**
  *
  * @author Noukkis
  */
-public class Clear extends Command {
+public class Aliases extends Command {
 
-    public Clear() {
-        this.name = "clear";
-        this.aliases = new String[]{"cl"};
-        this.arguments = "<number>";
-        this.botPermissions = new Permission[]{Permission.MESSAGE_MANAGE};
-        this.userPermissions = botPermissions;
-        this.help = "clear the channel from its <number> last messages (default 100)";
+    public Aliases() {
+        this.name = "aliases";
+        this.aliases = new String[]{"alias"};
+        this.guildOnly = false;
+        this.help = "Check the aliases of each command";
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        MessageHistory h = event.getChannel().getHistory();
-        try {
-            int x = Integer.parseInt(event.getArgs()) + 1;
-            if (x > 1) {
-                event.getTextChannel().deleteMessages(delete(x, h)).queue();
-            } else {
-                event.replyError("argument must be a number bigger than 0");
+        String aliases = "**" + event.getSelfUser().getName() + "** commands aliases:";
+        Map<String, List<Command>> commands = Help.getCommands(event);
+        String prefix = event.getClient().getPrefix();
+        for (String category : commands.keySet()) {
+            String categoryString = "\n\n__" + category + "__\n";
+            boolean empty = true;
+            Collections.sort(commands.get(category), (o1, o2) -> {
+                return o1.getName().compareTo(o2.getName());
+            });
+            for (Command command : commands.get(category)) {
+                if (command.getAliases() != null && command.getAliases().length > 0) {
+                    empty = false;
+                    categoryString += "\n" + prefix + command.getName() + " :";
+                    for (String aliase : command.getAliases()) {
+                        categoryString += " `" + aliase + "`";
+                    }
+                }
             }
-        } catch (Exception e) {
-            event.replyError("argument must be a number bigger than 0");
+            if(!empty) {
+                aliases += categoryString;
+            }
         }
-
-    }
-
-    private List<Message> delete(int x, MessageHistory h) {
-        List<Message> msgs = new LinkedList<>();
-        if (x < 1) {
-            return msgs;
-        }
-        if (x < 100) {
-            msgs.addAll(h.retrievePast(x).complete());
-        } else {
-            msgs.addAll(h.retrievePast(100).complete());
-            msgs.addAll(delete(x - 100, h));
-        }
-        return msgs;
+        event.reactSuccess();
+        event.replyInDM(aliases);
     }
 }

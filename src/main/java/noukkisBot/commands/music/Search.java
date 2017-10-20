@@ -21,58 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.others;
+package noukkisBot.commands.music;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import java.util.LinkedList;
-import java.util.List;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageHistory;
+import noukkisBot.wrks.music.MusicWrk;
 
 /**
  *
  * @author Noukkis
  */
-public class Clear extends Command {
+public class Search extends Command {
 
-    public Clear() {
-        this.name = "clear";
-        this.aliases = new String[]{"cl"};
-        this.arguments = "<number>";
+    public Search() {
+        this.name = "search";
+        this.arguments = "<song name>";
+        this.help = "search a song on YouTube";
         this.botPermissions = new Permission[]{Permission.MESSAGE_MANAGE};
-        this.userPermissions = botPermissions;
-        this.help = "clear the channel from its <number> last messages (default 100)";
+        this.category = new Category("Music");
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        MessageHistory h = event.getChannel().getHistory();
-        try {
-            int x = Integer.parseInt(event.getArgs()) + 1;
-            if (x > 1) {
-                event.getTextChannel().deleteMessages(delete(x, h)).queue();
-            } else {
-                event.replyError("argument must be a number bigger than 0");
-            }
-        } catch (Exception e) {
-            event.replyError("argument must be a number bigger than 0");
-        }
-
+        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
+        wrk.searchMusic(event);
     }
 
-    private List<Message> delete(int x, MessageHistory h) {
-        List<Message> msgs = new LinkedList<>();
-        if (x < 1) {
-            return msgs;
-        }
-        if (x < 100) {
-            msgs.addAll(h.retrievePast(x).complete());
-        } else {
-            msgs.addAll(h.retrievePast(100).complete());
-            msgs.addAll(delete(x - 100, h));
-        }
-        return msgs;
-    }
 }

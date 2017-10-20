@@ -28,6 +28,7 @@ import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import noukkisBot.helpers.Help;
 import noukkisBot.wrks.music.MusicWrk;
 
 /**
@@ -75,7 +76,7 @@ public class Player extends Command {
             if (event.getArgs().contains("x")) {
                 wrk.deleteMessageVisualPlayer();
             }
-            event.getMessage().delete().queue();
+            Help.deleteIn(event.getMessage(), 2000);
         } else {
             event.reply(help());
         }

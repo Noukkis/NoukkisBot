@@ -35,8 +35,6 @@ import noukkisBot.wrks.music.TrackManager;
  */
 public class MessageVisualPlayer extends VisualPlayer {
 
-    
-
     private Message msg;
     protected final TrackManager tm;
 
@@ -53,10 +51,10 @@ public class MessageVisualPlayer extends VisualPlayer {
     public void update() {
         if (msg != null) {
             AudioTrack cur = tm.getAudioPlayer().getPlayingTrack();
-            String update = "No current track";
+            String playing = tm.getAudioPlayer().isPaused() ? "⏸" : "▶";
+            String update = playing + " No current track";
             if (cur != null) {
-                String playing = tm.getAudioPlayer().isPaused() ? "⏸" : "▶";
-                update = playing + "\t" + cur.getInfo().title
+                update = playing + " " + cur.getInfo().title
                         + " " + time(cur.getPosition(), cur.getDuration());
                 if (!tm.getQueue().isEmpty()) {
                     update += "\n\n**Queue**\n```Markdown";
@@ -67,22 +65,24 @@ public class MessageVisualPlayer extends VisualPlayer {
                         if (i > 5) {
                             int more = (tm.getQueue().size() - 5);
                             if (more > 0) {
-                                update += "\n\tand " + more + " more...";
+                                update += "\n```and " + more + " more...";
                             }
                             break;
                         }
                     }
-                    update += "\n```";
                 }
 
             }
-            msg.editMessage(update).queue();
+            msg.editMessage(update).queue(null, (t) -> delete());
         }
     }
 
     @Override
     public void delete() {
-        msg.delete().queue();
+        if (msg != null) {
+            msg.delete().queue();
+            msg = null;
+        }
     }
 
     @Override

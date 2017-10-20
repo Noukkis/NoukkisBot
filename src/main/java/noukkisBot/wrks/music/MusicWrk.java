@@ -32,12 +32,14 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
+import noukkisBot.helpers.Help;
 import noukkisBot.wrks.music.visualPlayer.TopicVisualPlayer;
 
 /**
@@ -106,6 +108,7 @@ public class MusicWrk {
                     tm.queue(track);
                     event.reactSuccess();
                     tm.getVisualPlayer().update();
+                    Help.deleteIn(event.getMessage(), 2000);
                 }
 
                 @Override
@@ -115,27 +118,25 @@ public class MusicWrk {
                     }
                     event.reactSuccess();
                     tm.getVisualPlayer().update();
+                    Help.deleteIn(event.getMessage(), 2000);
                 }
 
                 @Override
                 public void noMatches() {
                     event.reactError();
+                    Help.deleteIn(event.getMessage(), 2000);
                 }
 
                 @Override
                 public void loadFailed(FriendlyException exception) {
                     event.reactError();
+                    Help.deleteIn(event.getMessage(), 2000);
                 }
             });
         } else {
-            event.reactWarning();
+            event.reactError();
+            Help.deleteIn(event.getMessage(), 2000);
         }
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                event.getMessage().delete().queue();
-            }
-        }, 2000);
     }
 
     public void createMessageVisualPlayer(CommandEvent event, String reply) {
@@ -155,5 +156,38 @@ public class MusicWrk {
 
     public TrackManager getTrackManager() {
         return tm;
-    }    
+    }
+
+    public void searchMusic(CommandEvent event) {
+        if (isConnected()) {
+            APM.loadItem("ytsearch:" + event.getArgs(), new AudioLoadResultHandler() {
+                @Override
+                public void trackLoaded(AudioTrack track) {
+                    List<AudioTrack> l = new ArrayList<>();
+                    l.add(track);
+                    new SearchResult(event, l).start();
+                }
+
+                @Override
+                public void playlistLoaded(AudioPlaylist playlist) {
+                    new SearchResult(event, playlist.getTracks()).start();
+                }
+
+                @Override
+                public void noMatches() {
+                    event.reactError();
+                    Help.deleteIn(event.getMessage(), 2000);
+                }
+
+                @Override
+                public void loadFailed(FriendlyException exception) {
+                    event.reactError();
+                    Help.deleteIn(event.getMessage(), 2000);
+                }
+            });
+        } else {
+            event.reactError();
+            Help.deleteIn(event.getMessage(), 2000);
+        }
+    }
 }

@@ -33,12 +33,12 @@ import noukkisBot.wrks.music.TrackManager;
  *
  * @author Noukkis
  */
-public class TopicVisualPlayer extends VisualPlayer {    
-    
+public class TopicVisualPlayer extends VisualPlayer {
+
     private final static String RADIO = "🔘";
     private final static String TIRET = "▬";
     private final static int RAPPORT = 2;
-    
+
     private TextChannel channel;
     private TrackManager tm;
     private String originalTopic;
@@ -54,17 +54,20 @@ public class TopicVisualPlayer extends VisualPlayer {
         if (channel != null) {
             AudioTrack cur = tm.getAudioPlayer().getPlayingTrack();
             String update = "No current track";
-            if(cur != null) {
+            if (cur != null) {
                 String playing = (tm.getAudioPlayer().isPaused() ? "⏸" : "▶") + "\t";
-                update = playing  + cur.getInfo().title + time(cur.getPosition(), cur.getDuration());
+                update = playing + cur.getInfo().title + time(cur.getPosition(), cur.getDuration());
             }
-            channel.getManager().setTopic(update).queue();
+            channel.getManager().setTopic(update).queue(null, (t) -> delete());
         }
     }
 
     @Override
     public void delete() {
-        channel.getManager().setTopic(originalTopic).queue();
+        if (channel != null) {
+            channel.getManager().setTopic(originalTopic).queue();
+            channel = null;
+        }
     }
 
     @Override

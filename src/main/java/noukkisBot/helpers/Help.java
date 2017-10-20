@@ -27,6 +27,7 @@ import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandClient;
 import com.jagrosh.jdautilities.commandclient.CommandClientBuilder;
+import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import com.jagrosh.jdautilities.commandclient.examples.AboutCommand;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import java.awt.Color;
@@ -41,8 +42,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import lombok.experimental.UtilityClass;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import noukkisBot.wrks.ReactionButtonsMaker;
 import noukkisBot.wrks.music.MusicWrk;
@@ -76,6 +80,15 @@ public class Help {
         OWNER_ID = props.getProperty("owner");
     }
 
+    public void deleteIn(Message msg, long time) {
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                msg.delete().queue();
+            }
+        }, time);
+    }
+
     public void setCommands(CommandClientBuilder ccb) {
         Reflections r = new Reflections(COMMANDS_PACKAGE);
         Set<Permission> perms = new HashSet<>();
@@ -93,27 +106,33 @@ public class Help {
         ccb.addCommand(new AboutCommand(Color.YELLOW, "a cool bot", features, perms.toArray(new Permission[0])));
     }
 
+    public static Map<String, List<Command>> getCommands(CommandEvent event) {
+        Map<String, List<Command>> res = new LinkedHashMap<>();
+        CommandClient cc = event.getClient();
+        List<Command> others = new ArrayList<>();
+        for (Command command : cc.getCommands()) {
+            if (!(command.isOwnerCommand() && !cc.getOwnerId().equals(event.getAuthor().getId()))) {
+                Category category = command.getCategory();
+                if (category != null) {
+                    if (!res.containsKey(category.getName())) {
+                        res.put(category.getName(), new ArrayList<>());
+                    }
+                    res.get(category.getName()).add(command);
+                } else {
+                    others.add(command);
+                }
+            }
+        }
+        res.put("Others", others);
+        return res;
+    }
+
     public static void setHelp(CommandClientBuilder ccb) {
         ccb.setHelpFunction((event) -> {
             CommandClient cc = event.getClient();
             String help = "**" + event.getSelfUser().getName() + "** commands:";
             String prefix = cc.getPrefix();
-            Map<String, List<Command>> commands = new LinkedHashMap<>();
-            List<Command> others = new ArrayList<>();
-            for (Command command : cc.getCommands()) {
-                if (!(command.isOwnerCommand() && !cc.getOwnerId().equals(event.getAuthor().getId()))) {
-                    Category category = command.getCategory();
-                    if (category != null) {
-                        if (!commands.containsKey(category.getName())) {
-                            commands.put(category.getName(), new ArrayList<>());
-                        }
-                        commands.get(category.getName()).add(command);
-                    } else {
-                        others.add(command);
-                    }
-                }
-            }
-            commands.put("Others", others);
+            Map<String, List<Command>> commands = getCommands(event);
             for (String category : commands.keySet()) {
                 help += "\n\n__" + category + "__\n";
                 Collections.sort(commands.get(category), (o1, o2) -> {
