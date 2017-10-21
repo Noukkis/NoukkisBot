@@ -25,6 +25,7 @@ package noukkisBot;
 
 import com.jagrosh.jdautilities.commandclient.CommandClientBuilder;
 import net.dv8tion.jda.core.AccountType;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import noukkisBot.helpers.Help;
@@ -43,7 +44,7 @@ public class Main {
                 .setPrefix("-");
         Help.setCommands(ccb);
         Help.setHelp(ccb);
-        new JDABuilder(AccountType.BOT)
+        JDA jda = new JDABuilder(AccountType.BOT)
                 .setToken(Help.BOT_TOKEN)
                 .setGame(Game.of("loading..."))
                 .addEventListener(Help.RBM)

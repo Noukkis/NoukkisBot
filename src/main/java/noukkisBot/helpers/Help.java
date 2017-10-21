@@ -44,7 +44,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import lombok.experimental.UtilityClass;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
@@ -56,23 +55,24 @@ import org.reflections.Reflections;
  *
  * @author Noukkis
  */
-@UtilityClass
 public class Help {
+    
+    public final static int KILL_STATUS = 15;
 
-    private final String PROPS_FILE = "bot.conf";
-    private final String COMMANDS_PACKAGE = "noukkisBot.commands";
+    private final static String PROPS_FILE = "bot.conf";
+    private final static String COMMANDS_PACKAGE = "noukkisBot.commands";
 
-    public final ReactionButtonsMaker RBM = new ReactionButtonsMaker();
-    public final String YES_REACT = "\uD83D\uDC4D";
-    public final String NO_REACT = "\uD83D\uDC4E";
-    public final String[] NUMBERS_REACTS = {"0\u20E3", "1\u20E3", "2\u20E3",
+    public final static ReactionButtonsMaker RBM = new ReactionButtonsMaker();
+    public final static String YES_REACT = "\uD83D\uDC4D";
+    public final static String NO_REACT = "\uD83D\uDC4E";
+    public final static String[] NUMBERS_REACTS = {"0\u20E3", "1\u20E3", "2\u20E3",
         "3\u20E3", "4\u20E3", "5\u20E3", "6\u20E3", "7\u20E3", "8\u20E3",
         "9\u20E3", "\uD83D\uDD1F"};
 
-    public String BOT_TOKEN;
-    public String OWNER_ID;
+    public static String BOT_TOKEN;
+    public static String OWNER_ID;
 
-    public void init() throws IOException {
+    public static void init() throws IOException {
         AudioSourceManagers.registerRemoteSources(MusicWrk.APM);
         Properties props = new Properties();
         props.load(new FileReader(PROPS_FILE));
@@ -80,7 +80,7 @@ public class Help {
         OWNER_ID = props.getProperty("owner");
     }
 
-    public void deleteIn(Message msg, long time) {
+    public static void deleteIn(Message msg, long time) {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
@@ -89,7 +89,7 @@ public class Help {
         }, time);
     }
 
-    public void setCommands(CommandClientBuilder ccb) {
+    public static void setCommands(CommandClientBuilder ccb) {
         Reflections r = new Reflections(COMMANDS_PACKAGE);
         Set<Permission> perms = new HashSet<>();
         for (Class<? extends Command> c : r.getSubTypesOf(Command.class)) {

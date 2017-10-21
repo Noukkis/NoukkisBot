@@ -25,6 +25,8 @@ package noukkisBot.commands.owner;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
+import net.dv8tion.jda.core.JDA.Status;
+import noukkisBot.helpers.Help;
 import noukkisBot.wrks.music.MusicWrk;
 
 /**
@@ -36,17 +38,27 @@ public class Kill extends Command {
     public Kill() {
         this.name = "kill";
         this.category = new Category("Owner-only");
-        this.aliases = new String[]{"k"};
-        this.help = "Kill this bot";
+        this.aliases = new String[]{"k", "restart", "r"};
+        this.help = "Kill or restart this bot";
         this.guildOnly = false;
         this.ownerCommand = true;
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        event.reactSuccess();
         System.out.println("Killed by command");
         MusicWrk.kill();
+        if (event.getMessage().getContent().contains("r")) {
+            event.replySuccess("Bot will restart");
+            new Thread(() -> {
+                while (!event.getJDA().getStatus().equals(Status.SHUTDOWN)) {
+                    System.out.print("");
+                }
+                System.exit(Help.KILL_STATUS);
+            }).start();
+        } else {
+            event.replySuccess("Bot shut down");
+        }
         event.getJDA().shutdown();
     }
 

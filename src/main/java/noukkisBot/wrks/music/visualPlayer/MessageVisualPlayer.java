@@ -65,7 +65,7 @@ public class MessageVisualPlayer extends VisualPlayer {
                         if (i > 5) {
                             int more = (tm.getQueue().size() - 5);
                             if (more > 0) {
-                                update += "\n```and " + more + " more...";
+                                update += "\n\nand " + more + " more...";
                             }
                             break;
                         }
@@ -73,7 +73,7 @@ public class MessageVisualPlayer extends VisualPlayer {
                 }
 
             }
-            msg.editMessage(update).queue(null, (t) -> delete());
+            msg.editMessage(update + "```").queue(null, (t) -> delete());
         }
     }
 

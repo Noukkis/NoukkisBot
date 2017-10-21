@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.music.visualPlayer.TopicVisualPlayer;
@@ -68,7 +67,7 @@ public class MusicWrk {
         }
     }
 
-    public MusicWrk(Guild guild) {
+    private MusicWrk(Guild guild) {
         this.guild = guild;
         this.ap = APM.createPlayer();
         this.tm = new TrackManager(ap);
