@@ -30,6 +30,7 @@ import java.util.List;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageHistory;
+import net.dv8tion.jda.core.entities.TextChannel;
 
 /**
  *
@@ -49,24 +50,34 @@ public class Clear extends Command {
     @Override
     protected void execute(CommandEvent event) {
         MessageHistory h = event.getChannel().getHistory();
+        List<Message> msgs = null;
         if (event.getArgs().trim().isEmpty()) {
-            event.getTextChannel().deleteMessages(delete(100, h)).queue();
+            msgs = retrieveMessages(100, h);
         } else {
             try {
                 int x = Integer.parseInt(event.getArgs()) + 1;
                 if (x > 1) {
-                    event.getTextChannel().deleteMessages(delete(x, h)).queue();
-                } else {
-                    event.replyError("argument must be a number bigger than 0");
+                    msgs = retrieveMessages(x, h);
                 }
             } catch (Exception e) {
-                event.replyError("argument must be a number bigger than 0");
             }
         }
 
+        if (msgs != null) {
+            if (msgs.size() == 2) {
+                event.getTextChannel().deleteMessages(msgs).queue();
+                event.replySuccess("1 message deleted");
+            } else {
+                delete(event.getTextChannel(), msgs);
+                event.replySuccess((msgs.size() - 1) + " messages deleted");
+            }
+
+        } else {
+            event.replyError("argument must be a number bigger than 0");
+        }
     }
 
-    private List<Message> delete(int x, MessageHistory h) {
+    private List<Message> retrieveMessages(int x, MessageHistory h) {
         List<Message> msgs = new LinkedList<>();
         if (x < 1) {
             return msgs;
@@ -75,8 +86,17 @@ public class Clear extends Command {
             msgs.addAll(h.retrievePast(x).complete());
         } else {
             msgs.addAll(h.retrievePast(100).complete());
-            msgs.addAll(delete(x - 100, h));
+            msgs.addAll(retrieveMessages(x - 100, h));
         }
         return msgs;
+    }
+
+    private void delete(TextChannel chan, List<Message> msgs) {
+        if(msgs.size() <= 100) {
+            chan.deleteMessages(msgs).queue();
+        } else {
+            chan.deleteMessages(msgs.subList(0, 100)).queue();
+            delete(chan, msgs.subList(100, msgs.size()));
+        }
     }
 }

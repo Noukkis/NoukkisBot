@@ -23,7 +23,16 @@
  */
 package noukkisBot.wrks.music.visualPlayer;
 
+import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioTrack;
+import com.sedmelluq.discord.lavaplayer.source.nico.NicoAudioTrack;
+import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioTrack;
+import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioTrack;
+import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioTrack;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import java.awt.Color;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import noukkisBot.helpers.Help;
@@ -52,30 +61,60 @@ public class MessageVisualPlayer extends VisualPlayer {
         if (msg != null) {
             AudioTrack cur = tm.getAudioPlayer().getPlayingTrack();
             String playing = tm.getAudioPlayer().isPaused() ? "⏸" : "▶";
-            String update = playing + " No current track";
+            MessageBuilder msgBuilder = new MessageBuilder();
+            EmbedBuilder emBuilder = new EmbedBuilder()
+                    .setTitle(playing + " No current track");
             if (cur != null) {
-                update = playing + " " + cur.getInfo().title
-                        + " " + time(cur.getPosition(), cur.getDuration());
+                emBuilder
+                        .setTitle(playing + " " + cur.getInfo().title, cur.getInfo().uri)
+                        .setDescription("**Time** : " + time(cur))
+                        .setColor(getColor(cur));
                 if (!tm.getQueue().isEmpty()) {
-                    update += "\n\n**Queue**\n```Markdown";
-                    int i = 1;
-                    for (AudioTrack track : tm.getQueue()) {
-                        update += "\n" + i + ". " + track.getInfo().title;
-                        i++;
-                        if (i > 5) {
-                            int more = (tm.getQueue().size() - 5);
-                            if (more > 0) {
-                                update += "\n\nand " + more + " more...";
-                            }
-                            break;
-                        }
-                    }
-                    update += "```";
+                    msgBuilder.append(getQueue());
                 }
 
             }
-            msg.editMessage(update).queue(null, (t) -> delete());
+            msg.editMessage(msgBuilder.setEmbed(emBuilder.build()).build()).queue(null, (t) -> delete());
         }
+    }
+
+    private String getQueue() {
+        String queue = "\n\n**Queue**\n```Markdown";
+        int i = 1;
+        for (AudioTrack track : tm.getQueue()) {
+            queue += "\n" + i + ". " + track.getInfo().title;
+            i++;
+            if (i > 5) {
+                int more = (tm.getQueue().size() - 5);
+                if (more > 0) {
+                    queue += "\n\n";
+                    for (int j = 0; j < 16; j++) {
+                        queue += "\t";
+                    }
+                    queue += "and " + more + " more...";
+                }
+                break;
+            }
+        }
+        return queue + "```";
+    }
+
+    private Color getColor(AudioTrack cur) {
+        Color c = Color.GRAY;
+       if (cur instanceof YoutubeAudioTrack) {
+            c = Color.RED;
+        } else if (cur instanceof VimeoAudioTrack) {
+            c = new Color(0, 173, 239);
+        } else if (cur instanceof TwitchStreamAudioTrack) {
+            c = new Color(100, 65, 164);
+        } else if (cur instanceof SoundCloudAudioTrack) {
+            c = new Color(255, 85, 16);
+        } else if (cur instanceof BandcampAudioTrack) {
+            c = new Color(98, 154, 169);
+        }  else if (cur instanceof NicoAudioTrack) {
+            c = Color.BLACK;
+        }
+       return c;
     }
 
     @Override

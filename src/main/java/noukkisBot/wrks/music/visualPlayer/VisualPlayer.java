@@ -23,6 +23,7 @@
  */
 package noukkisBot.wrks.music.visualPlayer;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import java.text.DecimalFormat;
 import net.dv8tion.jda.core.entities.TextChannel;
 
@@ -31,7 +32,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
  * @author Noukkis
  */
 public abstract class VisualPlayer {
-    
+
     private final static DecimalFormat DF = new DecimalFormat("00");
 
     public abstract void update();
@@ -40,7 +41,9 @@ public abstract class VisualPlayer {
 
     public abstract TextChannel getChannel();
 
-    protected String time(long pos, long dur) {
+    protected String time(AudioTrack cur) {
+        long pos = cur.getPosition();
+        long dur = cur.getDuration();
         int posM = (int) ((pos / 1000) / 60);
         int posS = (int) ((pos / 1000) % 60);
         int durM = (int) ((dur / 1000) / 60);

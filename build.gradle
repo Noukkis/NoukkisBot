@@ -1,5 +1,4 @@
 plugins {
-        id 'com.sedmelluq.jdaction' version '1.0.2'
 	id 'application'
 }
 
