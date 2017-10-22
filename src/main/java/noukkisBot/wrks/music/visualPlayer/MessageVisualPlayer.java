@@ -70,10 +70,11 @@ public class MessageVisualPlayer extends VisualPlayer {
                             break;
                         }
                     }
+                    update += "```";
                 }
 
             }
-            msg.editMessage(update + "```").queue(null, (t) -> delete());
+            msg.editMessage(update).queue(null, (t) -> delete());
         }
     }
 
