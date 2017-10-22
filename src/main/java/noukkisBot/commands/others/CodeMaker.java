@@ -45,7 +45,7 @@ public class CodeMaker extends Command {
     protected void execute(CommandEvent ce) {
         String author = ce.getAuthor().getName();
         String language = ce.getArgs().split("\\s+")[0];
-        String code = ce.getArgs().replaceFirst(language, "").replaceAll("`", "\u00AD`");
+        String code = ce.getArgs().replaceFirst(language, "").replaceAll("`", "\u00AD`").trim();
         String msg = "**" + author + "**'s " + language + " code :\n```" + language + "\n" + code + "\n```";
         ce.getTextChannel().sendMessage(msg).queue();
         ce.getMessage().delete().queue();

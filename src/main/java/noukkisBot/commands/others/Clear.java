@@ -49,15 +49,19 @@ public class Clear extends Command {
     @Override
     protected void execute(CommandEvent event) {
         MessageHistory h = event.getChannel().getHistory();
-        try {
-            int x = Integer.parseInt(event.getArgs()) + 1;
-            if (x > 1) {
-                event.getTextChannel().deleteMessages(delete(x, h)).queue();
-            } else {
+        if (event.getArgs().trim().isEmpty()) {
+            event.getTextChannel().deleteMessages(delete(100, h)).queue();
+        } else {
+            try {
+                int x = Integer.parseInt(event.getArgs()) + 1;
+                if (x > 1) {
+                    event.getTextChannel().deleteMessages(delete(x, h)).queue();
+                } else {
+                    event.replyError("argument must be a number bigger than 0");
+                }
+            } catch (Exception e) {
                 event.replyError("argument must be a number bigger than 0");
             }
-        } catch (Exception e) {
-            event.replyError("argument must be a number bigger than 0");
         }
 
     }
