@@ -36,8 +36,8 @@ public class Search extends Command {
 
     public Search() {
         this.name = "search";
-        this.arguments = "<song name>";
-        this.help = "search a song on YouTube";
+        this.arguments = "[-s] <song name>";
+        this.help = "search a song on YouTube (or SoundCloud with the -s argument)";
         this.botPermissions = new Permission[]{Permission.MESSAGE_MANAGE};
         this.category = new Category("Music");
     }
@@ -45,7 +45,12 @@ public class Search extends Command {
     @Override
     protected void execute(CommandEvent event) {
         MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        wrk.searchMusic(event);
+        if(event.getArgs().startsWith("-s ")) {
+             wrk.searchMusic(event, "scsearch:", event.getArgs().replaceFirst("-s ", ""));
+        } else {
+            wrk.searchMusic(event, "ytsearch:", event.getArgs());
+        }
+       
     }
 
 }

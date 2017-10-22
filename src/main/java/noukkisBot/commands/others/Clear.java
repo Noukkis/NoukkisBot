@@ -69,7 +69,7 @@ public class Clear extends Command {
                 event.replySuccess("1 message deleted");
             } else {
                 delete(event.getTextChannel(), msgs);
-                event.replySuccess((msgs.size() - 1) + " messages deleted");
+                event.getTextChannel().sendMessage((msgs.size() - 1) + " messages deleted").queue();
             }
 
         } else {

@@ -1,5 +1,4 @@
 @ECHO OFF
-
 set restartcode=15
 
 :start

@@ -48,11 +48,11 @@ public class SearchResult {
     private final Message cmdMsg;
     private int page;
 
-    public SearchResult(CommandEvent ce, List<AudioTrack> tracks) {
+    public SearchResult(CommandEvent ce, List<AudioTrack> tracks, String keywords) {
         this.tracks = tracks;
         this.currents = new ArrayList<>();
         this.chan = ce.getTextChannel();
-        this.keyword = ce.getArgs();
+        this.keyword = keywords;
         this.maxPage = (tracks.size() / MAX);
         this.page = 0;
         this.cmdMsg = ce.getMessage();

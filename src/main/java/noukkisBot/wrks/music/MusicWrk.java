@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.music.visualPlayer.TopicVisualPlayer;
@@ -101,7 +102,7 @@ public class MusicWrk {
 
     public void loadMusic(CommandEvent event) {
         if (isConnected()) {
-            APM.loadItem(event.getArgs(), new AudioLoadResultHandler() {
+            AudioLoadResultHandler alrh = new AudioLoadResultHandler() {
                 @Override
                 public void trackLoaded(AudioTrack track) {
                     tm.queue(track);
@@ -131,15 +132,21 @@ public class MusicWrk {
                     event.reactError();
                     Help.deleteIn(event.getMessage(), 2000);
                 }
-            });
+            };
+            if (!event.getMessage().getAttachments().isEmpty()) {
+                for (Message.Attachment a : event.getMessage().getAttachments()) {
+                    APM.loadItem(a.getUrl(), alrh);
+                }
+            } else {
+                APM.loadItem(event.getArgs(), alrh);
+            }
         } else {
-            event.reactError();
-            Help.deleteIn(event.getMessage(), 2000);
+            event.replyError("I'm not connected to any voice channel");
         }
     }
 
     public void createMessageVisualPlayer(CommandEvent event, String reply) {
-        event.replySuccess(reply, (msg) -> {
+        event.getTextChannel().sendMessage(event.getClient().getSuccess() + " " + reply).queue((msg) -> {
             deleteMessageVisualPlayer();
             tm.setVisualPlayer(new MessageVisualPlayer(msg, tm));
         });
@@ -157,19 +164,19 @@ public class MusicWrk {
         return tm;
     }
 
-    public void searchMusic(CommandEvent event) {
+    public void searchMusic(CommandEvent event, String prefix, String keywords) {
         if (isConnected()) {
-            APM.loadItem("ytsearch:" + event.getArgs(), new AudioLoadResultHandler() {
+            APM.loadItem(prefix + keywords, new AudioLoadResultHandler() {
                 @Override
                 public void trackLoaded(AudioTrack track) {
                     List<AudioTrack> l = new ArrayList<>();
                     l.add(track);
-                    new SearchResult(event, l).start();
+                    new SearchResult(event, l, keywords).start();
                 }
 
                 @Override
                 public void playlistLoaded(AudioPlaylist playlist) {
-                    new SearchResult(event, playlist.getTracks()).start();
+                    new SearchResult(event, playlist.getTracks(), keywords).start();
                 }
 
                 @Override
@@ -185,8 +192,7 @@ public class MusicWrk {
                 }
             });
         } else {
-            event.reactError();
-            Help.deleteIn(event.getMessage(), 2000);
+            event.replyError("I'm not connected to any voice channel");
         }
     }
 }
