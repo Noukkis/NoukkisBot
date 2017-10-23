@@ -42,7 +42,7 @@ public class Clear extends Command {
         this.name = "clear";
         this.aliases = new String[]{"cl"};
         this.arguments = "<number>";
-        this.botPermissions = new Permission[]{Permission.MESSAGE_MANAGE};
+        this.botPermissions = new Permission[]{Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY};
         this.userPermissions = botPermissions;
         this.help = "clear the channel from its <number> last messages (default 100)";
     }
@@ -69,7 +69,8 @@ public class Clear extends Command {
                 event.replySuccess("1 message deleted");
             } else {
                 delete(event.getTextChannel(), msgs);
-                event.getTextChannel().sendMessage((msgs.size() - 1) + " messages deleted").queue();
+                String success = event.getClient().getSuccess() + " ";
+                event.getTextChannel().sendMessage(success + (msgs.size() - 1) + " messages deleted").queue();
             }
 
         } else {

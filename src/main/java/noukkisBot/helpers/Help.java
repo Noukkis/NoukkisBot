@@ -50,6 +50,8 @@ import net.dv8tion.jda.core.entities.User;
 import noukkisBot.wrks.ReactionButtonsMaker;
 import noukkisBot.wrks.music.MusicWrk;
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -57,11 +59,11 @@ import org.reflections.Reflections;
  */
 public class Help {
     
-    public final static int KILL_STATUS = 15;
-
+    public final static Logger LOGGER = LoggerFactory.getLogger(Help.class);
     private final static String PROPS_FILE = "bot.conf";
     private final static String COMMANDS_PACKAGE = "noukkisBot.commands";
-
+    
+    public final static int KILL_STATUS = 15;
     public final static ReactionButtonsMaker RBM = new ReactionButtonsMaker();
     public final static String YES_REACT = "\uD83D\uDC4D";
     public final static String NO_REACT = "\uD83D\uDC4E";
@@ -73,6 +75,7 @@ public class Help {
     public static String OWNER_ID;
 
     public static void init() throws IOException {
+        LOGGER.info("Starting Bot using Java " + System.getProperty("java.version"));
         AudioSourceManagers.registerRemoteSources(MusicWrk.APM);
         Properties props = new Properties();
         props.load(new FileReader(PROPS_FILE));
@@ -102,8 +105,9 @@ public class Help {
                 ex.printStackTrace();
             }
         }
-        String[] features = {"Clean chats", "Polls maker", "Music"};
-        ccb.addCommand(new AboutCommand(Color.YELLOW, "a cool bot", features, perms.toArray(new Permission[0])));
+        String[] features = {"Cleans Chat", "Makes Polls", "Plays Music", "Manage Contests", "Some others things"};
+        String description = "a cool [Open Source](https://github.com/Noukkis/NoukkisBot) bot";
+        ccb.addCommand(new AboutCommand(Color.YELLOW, description, features, perms.toArray(new Permission[0])));
     }
 
     public static Map<String, List<Command>> getCommands(CommandEvent event) {

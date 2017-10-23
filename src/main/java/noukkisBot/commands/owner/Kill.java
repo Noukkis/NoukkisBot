@@ -46,19 +46,20 @@ public class Kill extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-        System.out.println("Killed by command");
+        Help.LOGGER.info("Killed by command");
         MusicWrk.kill();
-        if (event.getMessage().getContent().contains("r")) {
-            event.replySuccess("Bot will restart");
+        boolean restart = event.getMessage().getContent().contains("r");
+            event.replySuccess(restart ? "Bot will restart" : "Bot shut down");
             new Thread(() -> {
                 while (!event.getJDA().getStatus().equals(Status.SHUTDOWN)) {
                     System.out.print("");
                 }
-                System.exit(Help.KILL_STATUS);
+				if (restart) {
+					System.exit(Help.KILL_STATUS);
+				} else {
+					System.exit(0);
+				}		
             }).start();
-        } else {
-            event.replySuccess("Bot shut down");
-        }
         event.getJDA().shutdown();
     }
 

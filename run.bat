@@ -1,7 +1,10 @@
 @ECHO OFF
 set restartcode=15
+:s
+call gradle.bat run
+if %ERRORLEVEL% == 1 goto :s
 
-:start
-xcopy /Y build\libs\noukkisBot.jar run\
-java -jar run\noukkisBot.jar
-if %ERRORLEVEL% == %restartcode% goto :start
+REM :start
+REM xcopy /Y build\libs\noukkisBot.jar run\
+REM java -jar run\noukkisBot.jar
+REM if %ERRORLEVEL% == %restartcode% goto :start

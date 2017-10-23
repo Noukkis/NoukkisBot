@@ -9,6 +9,10 @@ if (!hasProperty('mainClass')) {
     ext.mainClass = 'noukkisBot.Main'
 }
 
+run {
+	main = 'noukkisBot.Main'
+}
+
 jar {
     archiveName = 'noukkisBot.jar'
     
