@@ -31,6 +31,7 @@ import java.util.List;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import noukkisBot.helpers.Help;
+import noukkisBot.wrks.ReactButtonsMaker;
 
 /**
  *
@@ -59,15 +60,16 @@ public class SearchResult {
     }
 
     void start() {
+        ReactButtonsMaker rbm = ReactButtonsMaker.getInstance();
         chan.sendMessage(createMsg()).queue((msg) -> {
-            Help.RBM.add(msg, "❌", (event) -> stop(msg));
-            Help.RBM.add(msg, "◀", (event) -> previous(msg));
+            rbm.add(msg, "❌", (event) -> stop(msg));
+            rbm.add(msg, "◀", (event) -> previous(msg));
             int max = tracks.size() > MAX ? MAX : tracks.size();
             for (int i = 0; i < max; i++) {
                 final int j = i;
-                Help.RBM.add(msg, Help.NUMBERS_REACTS[i + 1], (event) -> select(j, msg));
+                rbm.add(msg, Help.NUMBERS_REACTS[i + 1], (event) -> select(j, msg));
             }
-            Help.RBM.add(msg, "▶", (event) -> next(msg));
+            rbm.add(msg, "▶", (event) -> next(msg));
         });
     }
 

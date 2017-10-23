@@ -26,6 +26,8 @@ package noukkisBot.commands.contests;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.VoiceChannel;
+import noukkisBot.wrks.contest.ContestWrk;
 
 /**
  *
@@ -42,7 +44,12 @@ public class Contest extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-        
+        VoiceChannel chan = event.getMember().getVoiceState().getChannel();
+        if (chan != null) {
+            event.reply("Do you participate to this contest ?", (msg) -> ContestWrk.getInstance(msg, chan).start());
+        } else {
+            event.replyError("You're not connected to any VoiceChannel");
+        }
     }
 
 }

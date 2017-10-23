@@ -36,11 +36,17 @@ import net.dv8tion.jda.core.hooks.EventListener;
  *
  * @author Noukkis
  */
-public class ReactionButtonsMaker implements EventListener {
-
+public final class ReactButtonsMaker implements EventListener {
+    
+    private static final ReactButtonsMaker INSTANCE = new ReactButtonsMaker();
+    
     private final HashMap<String, HashMap<String, Consumer<GenericMessageReactionEvent>>> map;
+    
+    public static ReactButtonsMaker getInstance() {
+        return INSTANCE;
+    }
 
-    public ReactionButtonsMaker() {
+    private ReactButtonsMaker() {
         map = new HashMap<>();
     }
 
@@ -69,6 +75,11 @@ public class ReactionButtonsMaker implements EventListener {
                 }
             }
         }
+    }
+
+    public void removeAll(Message msg) {
+        msg.clearReactions().queue();
+        map.remove(msg.getId());
     }
 
 }

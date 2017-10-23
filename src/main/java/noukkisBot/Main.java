@@ -29,6 +29,7 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import noukkisBot.helpers.Help;
+import noukkisBot.wrks.ReactButtonsMaker;
 
 public class Main {
 
@@ -36,6 +37,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws Exception {
+        
         Help.init();
         CommandClientBuilder ccb = new CommandClientBuilder()
                 .useDefaultGame()
@@ -47,7 +49,7 @@ public class Main {
         JDA jda = new JDABuilder(AccountType.BOT)
                 .setToken(Help.BOT_TOKEN)
                 .setGame(Game.of("loading..."))
-                .addEventListener(Help.RBM)
+                .addEventListener(ReactButtonsMaker.getInstance())
                 .addEventListener(ccb.build())
                 .buildAsync();
     }

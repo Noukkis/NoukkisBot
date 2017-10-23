@@ -62,7 +62,7 @@ public class MusicWrk {
         return INSTANCES.get(guild);
     }
 
-    public static void kill() {
+    public static void killAll() {
         for (MusicWrk wrk : INSTANCES.values()) {
             wrk.disconnect();
         }
@@ -77,13 +77,11 @@ public class MusicWrk {
     }
 
     public boolean connect(VoiceChannel channel) {
-        if (channel != null) {
             try {
                 guild.getAudioManager().openAudioConnection(channel);
                 return true;
             } catch (Exception e) {
             }
-        }
         return false;
     }
 

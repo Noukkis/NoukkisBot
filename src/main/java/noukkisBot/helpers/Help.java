@@ -47,7 +47,6 @@ import java.util.TimerTask;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
-import noukkisBot.wrks.ReactionButtonsMaker;
 import noukkisBot.wrks.music.MusicWrk;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -64,7 +63,6 @@ public class Help {
     private final static String COMMANDS_PACKAGE = "noukkisBot.commands";
     
     public final static int KILL_STATUS = 15;
-    public final static ReactionButtonsMaker RBM = new ReactionButtonsMaker();
     public final static String YES_REACT = "\uD83D\uDC4D";
     public final static String NO_REACT = "\uD83D\uDC4E";
     public final static String[] NUMBERS_REACTS = {"0\u20E3", "1\u20E3", "2\u20E3",

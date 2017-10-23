@@ -26,6 +26,7 @@ package noukkisBot.commands.music;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.VoiceChannel;
 import noukkisBot.wrks.music.MusicWrk;
 
 /**
@@ -44,10 +45,15 @@ public class Join extends Command {
     @Override
     protected void execute(CommandEvent event) {
         MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        if(wrk.connect(event.getMember().getVoiceState().getChannel())) {
-            wrk.createMessageVisualPlayer(event, "Joined");
+        VoiceChannel chan = event.getMember().getVoiceState().getChannel();
+        if (chan != null) {
+            if (wrk.connect(chan)) {
+                wrk.createMessageVisualPlayer(event, "Joined");
+            } else {
+                event.reactError();
+            }
         } else {
-            event.reactError();
+            event.replyError("You're not connected to any VoiceChannel");
         }
     }
 

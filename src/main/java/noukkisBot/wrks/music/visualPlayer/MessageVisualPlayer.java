@@ -35,7 +35,7 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
-import noukkisBot.helpers.Help;
+import noukkisBot.wrks.ReactButtonsMaker;
 import noukkisBot.wrks.music.TrackManager;
 
 /**
@@ -50,10 +50,11 @@ public class MessageVisualPlayer extends VisualPlayer {
     public MessageVisualPlayer(Message msg, TrackManager tm) {
         this.msg = msg;
         this.tm = tm;
-        Help.RBM.add(msg, "⏹", (event) -> tm.clear());
-        Help.RBM.add(msg, "⏯", (event) -> tm.pauseContinue());
-        Help.RBM.add(msg, "⏭", (event) -> tm.nextTrack());
-        Help.RBM.add(msg, "🔀", (event) -> tm.shuffle());
+        ReactButtonsMaker rbm = ReactButtonsMaker.getInstance();
+        rbm.add(msg, "⏹", (event) -> tm.clear());
+        rbm.add(msg, "⏯", (event) -> tm.pauseContinue());
+        rbm.add(msg, "⏭", (event) -> tm.nextTrack());
+        rbm.add(msg, "🔀", (event) -> tm.shuffle());
     }
 
     @Override
@@ -101,7 +102,7 @@ public class MessageVisualPlayer extends VisualPlayer {
 
     private Color getColor(AudioTrack cur) {
         Color c = Color.GRAY;
-       if (cur instanceof YoutubeAudioTrack) {
+        if (cur instanceof YoutubeAudioTrack) {
             c = Color.RED;
         } else if (cur instanceof VimeoAudioTrack) {
             c = new Color(0, 173, 239);
@@ -111,10 +112,10 @@ public class MessageVisualPlayer extends VisualPlayer {
             c = new Color(255, 85, 16);
         } else if (cur instanceof BandcampAudioTrack) {
             c = new Color(98, 154, 169);
-        }  else if (cur instanceof NicoAudioTrack) {
+        } else if (cur instanceof NicoAudioTrack) {
             c = Color.BLACK;
         }
-       return c;
+        return c;
     }
 
     @Override
