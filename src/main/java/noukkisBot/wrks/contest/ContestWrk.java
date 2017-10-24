@@ -24,7 +24,6 @@
 package noukkisBot.wrks.contest;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,20 +46,21 @@ public class ContestWrk {
 
     private final VoiceChannel chan;
     private final Map<Member, Integer> members;
+    private final Map<Message, ArrayList<Member>> msgs;
 
     private Message configMsg;
     private Message ranksMsg;
-    private ArrayList<Message> msgs;
     private boolean running;
+    
+    private Mode mode;
+    private enum Mode {PLUS, MINUS};
 
     public static ContestWrk getInstance(Guild guild) {
         return INSTANCES.get(guild);
     }
 
     public static ContestWrk getInstance(Message msg, VoiceChannel chan) {
-        if (!INSTANCES.containsKey(chan.getGuild())) {
-            INSTANCES.put(chan.getGuild(), new ContestWrk(msg, chan));
-        }
+        INSTANCES.putIfAbsent(chan.getGuild(), new ContestWrk(msg, chan));
         return INSTANCES.get(chan.getGuild());
     }
 
@@ -72,34 +72,42 @@ public class ContestWrk {
 
     private ContestWrk(Message msg, VoiceChannel chan) {
         this.chan = chan;
-        this.msgs = new ArrayList<>();
         this.configMsg = msg;
         this.running = false;
         this.members = new HashMap<>();
+        this.msgs = new HashMap<>();
     }
 
-    public void start() {
-        rbm.add(configMsg, Help.YES_REACT, (event) -> start(true));
-        rbm.add(configMsg, Help.NO_REACT, (event) -> start(false));
+    public void start(Member sender) {
+        rbm.add(configMsg, Help.YES_REACT, (event) -> start(true, sender));
+        rbm.add(configMsg, Help.NO_REACT, (event) -> start(false, sender));
     }
 
-    private void start(boolean participate) {
+    private void start(boolean participate, Member sender) {
         new Thread(() -> {
             rbm.removeAll(configMsg);
-
+            rbm.add(configMsg, "➕", (event) -> {mode = Mode.PLUS; configMsg.editMessage("➕ Add Mode").queue();});
+            rbm.add(configMsg, "➖", (event) -> {mode = Mode.MINUS; configMsg.editMessage("➖ Remove Mode").queue();});
+            configMsg.editMessage("➕ Add Mode").queue();
+            
             Message msg = configMsg.getTextChannel().sendMessage("configuring").complete();
+            msgs.put(msg, new ArrayList<>());
             String s = "```Markdown";
             int i = 1;
             for (Member member : chan.getMembers()) {
+                if(!participate && member.equals(sender)) {
+                    continue;
+                }
                 members.put(member, 0);
                 if (i > 10) {
                     i = 1;
                     msg.editMessage(s + "```").queue();
                     msg = msg.getTextChannel().sendMessage("configuring").complete();
-                    msgs.add(msg);
+                    msgs.put(msg, new ArrayList<>());
                     s = "```Markdown";
                 }
                 rbm.add(msg, Help.NUMBERS_REACTS[i], (event) -> action(member));
+                msgs.get(msg).add(member);
                 s += "\n" + i + ". " + member.getEffectiveName();
                 i++;
             }
@@ -114,8 +122,8 @@ public class ContestWrk {
         if (msgs.isEmpty()) {
             configMsg.delete().queue();
         } else {
-            msgs.add(configMsg);
-            configMsg.getTextChannel().deleteMessages(msgs).queue();
+            msgs.put(configMsg, null);
+            configMsg.getTextChannel().deleteMessages(msgs.keySet()).queue();
         }
         if (ranksMsg != null) {
             ranksMsg.delete().queue();
@@ -123,7 +131,7 @@ public class ContestWrk {
     }
 
     private void action(Member member) {
-        int p = members.get(member) + 1;
+        int p = members.get(member) + (mode == Mode.PLUS ? 1 : -1);
         members.replace(member, p);
         if (ranksMsg != null) {
             ranksMsg.editMessage(getRanks()).queue();

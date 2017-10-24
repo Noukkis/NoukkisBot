@@ -56,9 +56,7 @@ public class MusicWrk {
     private final TrackManager tm;
 
     public static MusicWrk getInstance(Guild guild) {
-        if (!INSTANCES.containsKey(guild)) {
-            INSTANCES.put(guild, new MusicWrk(guild));
-        }
+        INSTANCES.putIfAbsent(guild, new MusicWrk(guild));
         return INSTANCES.get(guild);
     }
 
@@ -77,11 +75,11 @@ public class MusicWrk {
     }
 
     public boolean connect(VoiceChannel channel) {
-            try {
-                guild.getAudioManager().openAudioConnection(channel);
-                return true;
-            } catch (Exception e) {
-            }
+        try {
+            guild.getAudioManager().openAudioConnection(channel);
+            return true;
+        } catch (Exception e) {
+        }
         return false;
     }
 

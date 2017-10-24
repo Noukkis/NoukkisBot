@@ -46,7 +46,7 @@ public class Contest extends Command {
     protected void execute(CommandEvent event) {
         VoiceChannel chan = event.getMember().getVoiceState().getChannel();
         if (chan != null) {
-            event.reply("Do you participate to this contest ?", (msg) -> ContestWrk.getInstance(msg, chan).start());
+            event.reply("Do you participate to this contest ?", (msg) -> ContestWrk.getInstance(msg, chan).start(event.getMember()));
         } else {
             event.replyError("You're not connected to any VoiceChannel");
         }
