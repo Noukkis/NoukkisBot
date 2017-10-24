@@ -24,11 +24,14 @@
 package noukkisBot.wrks.contest;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.ReactButtonsMaker;
@@ -45,7 +48,10 @@ public class ContestWrk {
     private final VoiceChannel chan;
     private final Map<Member, Integer> members;
 
+    private Message configMsg;
+    private Message ranksMsg;
     private ArrayList<Message> msgs;
+    private boolean running;
 
     public static ContestWrk getInstance(Guild guild) {
         return INSTANCES.get(guild);
@@ -67,45 +73,91 @@ public class ContestWrk {
     private ContestWrk(Message msg, VoiceChannel chan) {
         this.chan = chan;
         this.msgs = new ArrayList<>();
-        msgs.add(msg);
+        this.configMsg = msg;
+        this.running = false;
         this.members = new HashMap<>();
     }
 
     public void start() {
-        rbm.add(msgs.get(0), Help.YES_REACT, (event) -> start(true));
-        rbm.add(msgs.get(0), Help.NO_REACT, (event) -> start(false));
+        rbm.add(configMsg, Help.YES_REACT, (event) -> start(true));
+        rbm.add(configMsg, Help.NO_REACT, (event) -> start(false));
     }
 
     private void start(boolean participate) {
-        rbm.removeAll(msgs.get(0));
-        
-        Message msg = msgs.get(0);
-        String s = "```Markdown";
-        int i = 1;
-        for (Member member : chan.getMembers()) {
-            members.put(member, 0);
-            if(i > 10) {
-                i = 1;
-                msg.editMessage(s + "```").queue();
-                msg = msg.getTextChannel().sendMessage("").complete();
-                msgs.add(msg);
-                s = "```Markdown";
+        new Thread(() -> {
+            rbm.removeAll(configMsg);
+
+            Message msg = configMsg.getTextChannel().sendMessage("configuring").complete();
+            String s = "```Markdown";
+            int i = 1;
+            for (Member member : chan.getMembers()) {
+                members.put(member, 0);
+                if (i > 10) {
+                    i = 1;
+                    msg.editMessage(s + "```").queue();
+                    msg = msg.getTextChannel().sendMessage("configuring").complete();
+                    msgs.add(msg);
+                    s = "```Markdown";
+                }
+                rbm.add(msg, Help.NUMBERS_REACTS[i], (event) -> action(member));
+                s += "\n" + i + ". " + member.getEffectiveName();
+                i++;
             }
-            rbm.add(msg, Help.NUMBERS_REACTS[i], (event) -> addPoint(member));
-            s += "\n" + i + ". " + member.getEffectiveName();
-            i++;
-        }
-        msg.editMessage(s + "```").queue();
+            msg.editMessage(s + "```").queue();
+            running = true;
+        }).start();
     }
 
     private void kill() {
-        for (Message msg : msgs) {
-            msg.delete().queue();
+        INSTANCES.remove(chan.getGuild());
+        running = false;
+        if (msgs.isEmpty()) {
+            configMsg.delete().queue();
+        } else {
+            msgs.add(configMsg);
+            configMsg.getTextChannel().deleteMessages(msgs).queue();
+        }
+        if (ranksMsg != null) {
+            ranksMsg.delete().queue();
         }
     }
 
-    private void addPoint(Member member) {
+    private void action(Member member) {
         int p = members.get(member) + 1;
         members.replace(member, p);
+        if (ranksMsg != null) {
+            ranksMsg.editMessage(getRanks()).queue();
+        }
     }
+
+    public void newRankMsg(TextChannel textChannel) {
+        if (ranksMsg != null) {
+            ranksMsg.delete().queue();
+        }
+        textChannel.sendMessage(getRanks()).queue((msg) -> ranksMsg = msg);
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    private String getRanks() {
+        if (members.isEmpty()) {
+            return "Nobody is participing at this contest";
+        }
+        ArrayList<Member> ordered = new ArrayList<>(members.keySet());
+        Collections.sort(ordered, (o1, o2) -> {
+            return members.get(o1) - members.get(o2);
+        });
+        String res = "```Markdown";
+        int i = 1;
+        for (Member member : ordered) {
+            res += "\n" + i + ". " + member.getEffectiveName() + "#"
+                    + member.getUser().getDiscriminator()
+                    + " [" + members.get(member) + "pts]";
+            i++;
+        }
+        return res + "```";
+    }
+
 }
