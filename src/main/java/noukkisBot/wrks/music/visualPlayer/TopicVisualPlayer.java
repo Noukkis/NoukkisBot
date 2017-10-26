@@ -27,6 +27,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import java.text.DecimalFormat;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.requests.RestAction;
+import noukkisBot.wrks.RestActionScheduler;
 import noukkisBot.wrks.music.TrackManager;
 
 /**
@@ -38,19 +40,23 @@ public class TopicVisualPlayer extends VisualPlayer {
     private final static String RADIO = "🔘";
     private final static String TIRET = "▬";
     private final static int RAPPORT = 2;
+    
+    
+    private final TrackManager tm;
+    private final String originalTopic;
+    private final RestActionScheduler<Void> ras;
 
     private TextChannel channel;
-    private TrackManager tm;
-    private String originalTopic;
 
     public TopicVisualPlayer(Message msg, TrackManager tm) {
         this.channel = msg.getTextChannel();
         this.tm = tm;
         this.originalTopic = channel.getTopic();
+        this.ras = new RestActionScheduler<>(1000);
     }
 
     @Override
-    public void update() {
+    public void update(boolean now) {
         if (channel != null) {
             AudioTrack cur = tm.getAudioPlayer().getPlayingTrack();
             String update = "No current track";
@@ -58,7 +64,7 @@ public class TopicVisualPlayer extends VisualPlayer {
                 String playing = (tm.getAudioPlayer().isPaused() ? "⏸" : "▶") + "\t";
                 update = playing + cur.getInfo().title + time(cur);
             }
-            channel.getManager().setTopic(update).queue(null, (t) -> delete());
+            ras.schedule(channel.getManager().setTopic(update), now, null, (t) -> delete());
         }
     }
 

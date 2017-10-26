@@ -35,7 +35,7 @@ public abstract class VisualPlayer {
 
     private final static DecimalFormat DF = new DecimalFormat("00");
 
-    public abstract void update();
+    public abstract void update(boolean now);
 
     public abstract void delete();
 

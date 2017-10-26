@@ -58,12 +58,12 @@ public class TrackManager extends AudioEventAdapter {
         if (endReason.mayStartNext) {
             nextTrack();
         }
-        vpw.update();
+        vpw.update(false);
     }
 
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        vpw.update();
+        vpw.update(false);
     }
 
     public void queue(AudioTrack track) {
@@ -88,7 +88,7 @@ public class TrackManager extends AudioEventAdapter {
 
     public void pauseContinue() {
         ap.setPaused(!ap.isPaused());
-        vpw.update();
+        vpw.update(false);
     }
 
     public void nextTrack() {
@@ -99,7 +99,7 @@ public class TrackManager extends AudioEventAdapter {
 
     public void shuffle() {
         Collections.shuffle(queue);
-        vpw.update();
+        vpw.update(false);
     }
 
     public VisualPlayer getVisualPlayer() {

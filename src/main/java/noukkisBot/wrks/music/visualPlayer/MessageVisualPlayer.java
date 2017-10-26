@@ -36,6 +36,7 @@ import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import noukkisBot.wrks.ReactButtonsMaker;
+import noukkisBot.wrks.RestActionScheduler;
 import noukkisBot.wrks.music.TrackManager;
 
 /**
@@ -44,12 +45,15 @@ import noukkisBot.wrks.music.TrackManager;
  */
 public class MessageVisualPlayer extends VisualPlayer {
 
-    private Message msg;
     protected final TrackManager tm;
+    private final RestActionScheduler<Message> ras;
+    
+    private Message msg;
 
     public MessageVisualPlayer(Message msg, TrackManager tm) {
         this.msg = msg;
         this.tm = tm;
+        this.ras = new RestActionScheduler<>(1000);
         ReactButtonsMaker rbm = ReactButtonsMaker.getInstance();
         rbm.add(msg, "⏹", (event) -> tm.clear());
         rbm.add(msg, "⏯", (event) -> tm.pauseContinue());
@@ -58,7 +62,7 @@ public class MessageVisualPlayer extends VisualPlayer {
     }
 
     @Override
-    public void update() {
+    public void update(boolean now) {
         if (msg != null) {
             AudioTrack cur = tm.getAudioPlayer().getPlayingTrack();
             String playing = tm.getAudioPlayer().isPaused() ? "⏸" : "▶";
@@ -75,7 +79,7 @@ public class MessageVisualPlayer extends VisualPlayer {
                 }
 
             }
-            msg.editMessage(msgBuilder.setEmbed(emBuilder.build()).build()).queue(null, (t) -> delete());
+            ras.schedule(msg.editMessage(msgBuilder.setEmbed(emBuilder.build()).build()), now, null, (t) -> delete());
         }
     }
 

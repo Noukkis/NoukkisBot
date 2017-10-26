@@ -56,7 +56,9 @@ public class MusicWrk {
     private final TrackManager tm;
 
     public static MusicWrk getInstance(Guild guild) {
-        INSTANCES.putIfAbsent(guild, new MusicWrk(guild));
+        if (!INSTANCES.containsKey(guild)) {
+            INSTANCES.put(guild, new MusicWrk(guild));
+        }
         return INSTANCES.get(guild);
     }
 
@@ -103,7 +105,7 @@ public class MusicWrk {
                 public void trackLoaded(AudioTrack track) {
                     tm.queue(track);
                     event.reactSuccess();
-                    tm.getVisualPlayer().update();
+                    tm.getVisualPlayer().update(false);
                     Help.deleteIn(event.getMessage(), 2000);
                 }
 
@@ -113,7 +115,7 @@ public class MusicWrk {
                         tm.queue(track);
                     }
                     event.reactSuccess();
-                    tm.getVisualPlayer().update();
+                    tm.getVisualPlayer().update(false);
                     Help.deleteIn(event.getMessage(), 2000);
                 }
 

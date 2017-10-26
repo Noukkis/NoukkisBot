@@ -33,16 +33,17 @@ import net.dv8tion.jda.core.entities.TextChannel;
  */
 public class VisualPlayerWrapper extends VisualPlayer {
 
+    private final Timer timer;
+    
     private VisualPlayer msg;
     private VisualPlayer topic;
-    private Timer timer;
 
     public VisualPlayerWrapper() {
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                update();
+                update(true);
             }
         }, 5000, 2000);
     }
@@ -75,12 +76,12 @@ public class VisualPlayerWrapper extends VisualPlayer {
     }
 
     @Override
-    public void update() {
+    public void update(boolean now) {
         if (msg != null) {
-            msg.update();
+            msg.update(now);
         }
         if (topic != null) {
-            topic.update();
+            topic.update(now);
         }
     }
 
