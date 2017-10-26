@@ -34,6 +34,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.ReactButtonsMaker;
+import noukkisBot.wrks.RestActionScheduler;
 
 /**
  *
@@ -47,13 +48,18 @@ public class ContestWrk {
     private final VoiceChannel chan;
     private final Map<Member, Integer> members;
     private final Map<Message, ArrayList<Member>> msgs;
+    private final Message configMsg;
+    private final RestActionScheduler<Message> configRas;
+    private final RestActionScheduler<Message> ranksRas;
 
-    private Message configMsg;
     private Message ranksMsg;
     private boolean running;
-    
+
     private Mode mode;
-    private enum Mode {PLUS, MINUS};
+
+    private enum Mode {
+        PLUS, MINUS
+    };
 
     public static ContestWrk getInstance(Guild guild) {
         return INSTANCES.get(guild);
@@ -76,6 +82,9 @@ public class ContestWrk {
         this.running = false;
         this.members = new HashMap<>();
         this.msgs = new HashMap<>();
+        this.mode = Mode.PLUS;
+        this.configRas = new RestActionScheduler<>(1000);
+        this.ranksRas = new RestActionScheduler<>(1000);
     }
 
     public void start(Member sender) {
@@ -86,16 +95,22 @@ public class ContestWrk {
     private void start(boolean participate, Member sender) {
         new Thread(() -> {
             rbm.removeAll(configMsg);
-            rbm.add(configMsg, "➕", (event) -> {mode = Mode.PLUS; configMsg.editMessage("➕ Add Mode").queue();});
-            rbm.add(configMsg, "➖", (event) -> {mode = Mode.MINUS; configMsg.editMessage("➖ Remove Mode").queue();});
+            rbm.add(configMsg, "➕", (event) -> {
+                mode = Mode.PLUS;
+                configRas.schedule(configMsg.editMessage("➕ Add Mode"), false);
+            });
+            rbm.add(configMsg, "➖", (event) -> {
+                mode = Mode.MINUS;
+                configRas.schedule(configMsg.editMessage("➖ Remove Mode"), false);
+            });
             configMsg.editMessage("➕ Add Mode").queue();
-            
+
             Message msg = configMsg.getTextChannel().sendMessage("configuring").complete();
             msgs.put(msg, new ArrayList<>());
             String s = "```Markdown";
             int i = 1;
             for (Member member : chan.getMembers()) {
-                if(!participate && member.equals(sender)) {
+                if (!participate && member.equals(sender)) {
                     continue;
                 }
                 members.put(member, 0);
@@ -134,7 +149,7 @@ public class ContestWrk {
         int p = members.get(member) + (mode == Mode.PLUS ? 1 : -1);
         members.replace(member, p);
         if (ranksMsg != null) {
-            ranksMsg.editMessage(getRanks()).queue();
+            ranksRas.schedule(ranksMsg.editMessage(getRanks()), false);
         }
     }
 
@@ -155,7 +170,7 @@ public class ContestWrk {
         }
         ArrayList<Member> ordered = new ArrayList<>(members.keySet());
         Collections.sort(ordered, (o1, o2) -> {
-            return members.get(o1) - members.get(o2);
+            return members.get(o2) - members.get(o1);
         });
         String res = "```Markdown";
         int i = 1;
