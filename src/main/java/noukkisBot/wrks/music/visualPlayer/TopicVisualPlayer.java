@@ -24,10 +24,8 @@
 package noukkisBot.wrks.music.visualPlayer;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import java.text.DecimalFormat;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.requests.RestAction;
 import noukkisBot.wrks.RestActionScheduler;
 import noukkisBot.wrks.music.TrackManager;
 

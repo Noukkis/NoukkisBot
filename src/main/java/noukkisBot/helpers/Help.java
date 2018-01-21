@@ -33,6 +33,12 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import java.awt.Color;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,6 +50,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
@@ -57,11 +67,11 @@ import org.slf4j.LoggerFactory;
  * @author Noukkis
  */
 public class Help {
-    
+
     public final static Logger LOGGER = LoggerFactory.getLogger(Help.class);
     private final static String PROPS_FILE = "bot.conf";
     private final static String COMMANDS_PACKAGE = "noukkisBot.commands";
-    
+
     public final static int KILL_STATUS = 15;
     public final static String YES_REACT = "\uD83D\uDC4D";
     public final static String NO_REACT = "\uD83D\uDC4E";
@@ -156,5 +166,19 @@ public class Help {
             }
             return help;
         });
+    }
+
+    public static JsonObject httpJsonGet(String baseUrl, String query) throws MalformedURLException {
+        try {
+            HttpURLConnection connection = null;
+            URL url = new URL(baseUrl + URLEncoder.encode(query, "UTF-8"));
+            try (InputStream is = url.openStream(); JsonReader rdr = Json.createReader(is)) {
+                return rdr.readObject();
+            } catch (IOException ex) {
+                return null;
+            }
+        } catch (UnsupportedEncodingException ex) {
+            return null;
+        }
     }
 }

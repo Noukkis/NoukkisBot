@@ -50,7 +50,7 @@ public class Kill extends Command {
         Help.LOGGER.info("Killed by command");
         MusicWrk.killAll();
         ContestWrk.killAll();
-        boolean restart = event.getMessage().getContent().contains("r");
+        boolean restart = event.getMessage().getContentRaw().contains("r");
         event.replySuccess(restart ? "Bot will restart" : "Bot shut down");
         new Thread(() -> {
             while (!event.getJDA().getStatus().equals(Status.SHUTDOWN)) {

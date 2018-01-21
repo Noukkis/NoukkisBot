@@ -21,35 +21,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot;
+package noukkisBot.commands.others;
 
-import com.jagrosh.jdautilities.commandclient.CommandClientBuilder;
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.Game;
-import noukkisBot.helpers.Help;
-import noukkisBot.wrks.ReactButtonsMaker;
+import com.jagrosh.jdautilities.commandclient.Command;
+import com.jagrosh.jdautilities.commandclient.CommandEvent;
+import net.dv8tion.jda.core.entities.MessageEmbed;
+import noukkisBot.helpers.WolframAlphaHelp;
 
-public class Main {
+/**
+ *
+ * @author Noukkis
+ */
+public class WolframAlpha extends Command {
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) throws Exception {
-        
-        Help.init();
-        CommandClientBuilder ccb = new CommandClientBuilder()
-                .setOwnerId(Help.OWNER_ID)
-                .setEmojis("\u2705", "\u26A0", "\u274C")
-                .setPrefix("-");
-        Help.setCommands(ccb);
-        Help.setHelp(ccb);
-        JDA jda = new JDABuilder(AccountType.BOT)
-                .setToken(Help.BOT_TOKEN)
-                .setGame(Game.playing("loading..."))
-                .addEventListener(ReactButtonsMaker.getInstance())
-                .addEventListener(ccb.build())
-                .buildAsync();
+    public WolframAlpha() {
+        this.name = "wolframalpha";
+        this.arguments = "<query>";
+        this.aliases = new String[]{"wa"};
+        this.help = "perform a WolframAlpha query";
+        this.guildOnly = false;
     }
+
+    @Override
+    protected void execute(CommandEvent event) {
+        MessageEmbed embed = WolframAlphaHelp.compute(event.getArgs());
+        if(embed != null) {
+            event.reply(embed);
+        } else {
+            event.replyError("WolframAlpha couldn't process your query");
+        }
+    }
+
 }
