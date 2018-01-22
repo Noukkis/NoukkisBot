@@ -34,9 +34,8 @@ import net.dv8tion.jda.core.entities.MessageEmbed;
  * @author Noukkis
  */
 public class WolframAlphaHelp {
-
-    private static final String API_KEY = "XWUK7R-ATXA73RPEQ";
-    private static final String BASE_URL = "http://api.wolframalpha.com/v2/query?output=json&format=plaintext,image&appid=" + API_KEY + "&input=";
+    
+    private static final String BASE_URL = "http://api.wolframalpha.com/v2/query?output=json&format=plaintext,image&appid=" + Help.getProp("WolframAlpha") + "&input=";
 
     public static MessageEmbed compute(String query) {
         try {

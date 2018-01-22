@@ -21,34 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.music.miniCommands;
+package noukkisBot.commands.owner;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import noukkisBot.wrks.music.MusicWrk;
+import noukkisBot.helpers.Help;
 
 /**
  *
  * @author Noukkis
  */
-public class Next extends Command {
+public class Rename extends Command {
 
-    public Next() {
-        this.name = "next";
-        this.aliases = new String[]{"skip"};
-        this.help = "Launch the next track";
-        this.category = new Category("Music");
+    public Rename() {
+        this.name = "rename";
+        this.category = new Category("Owner-only");
+        this.aliases = new String[]{"rn"};
+        this.help = "Rename this bot";
+        this.guildOnly = false;
+        this.ownerCommand = true;
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        if (wrk.isConnected()) {
-            wrk.getTrackManager().nextTrack();
-            event.reactSuccess();
-        } else {
-            event.reactError();
-        }
+        Help.LOGGER.info("Renamed on " + event.getArgs());
+        event.getJDA().getSelfUser().getManager().setName(event.getArgs()).queue();
     }
 
 }

@@ -24,6 +24,8 @@
 package noukkisBot;
 
 import com.jagrosh.jdautilities.commandclient.CommandClientBuilder;
+import java.io.IOException;
+import javax.security.auth.login.LoginException;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
@@ -36,20 +38,27 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws Exception {
-        
-        Help.init();
-        CommandClientBuilder ccb = new CommandClientBuilder()
-                .setOwnerId(Help.OWNER_ID)
-                .setEmojis("\u2705", "\u26A0", "\u274C")
-                .setPrefix("-");
-        Help.setCommands(ccb);
-        Help.setHelp(ccb);
-        JDA jda = new JDABuilder(AccountType.BOT)
-                .setToken(Help.BOT_TOKEN)
-                .setGame(Game.playing("loading..."))
-                .addEventListener(ReactButtonsMaker.getInstance())
-                .addEventListener(ccb.build())
-                .buildAsync();
+    public static void main(String[] args) {
+        launch();
+    }
+
+    public static void launch() {
+        try {
+            Help.init();
+            CommandClientBuilder ccb = new CommandClientBuilder()
+                    .setOwnerId(Help.OWNER_ID)
+                    .setEmojis("\u2705", "\u26A0", "\u274C")
+                    .setPrefix("-");
+            Help.setCommands(ccb);
+            Help.setHelp(ccb);
+            JDA jda = new JDABuilder(AccountType.BOT)
+                    .setToken(Help.BOT_TOKEN)
+                    .setGame(Game.playing("loading..."))
+                    .addEventListener(ReactButtonsMaker.getInstance())
+                    .addEventListener(ccb.build())
+                    .buildAsync();
+        } catch (IOException | LoginException ex) {
+           Help.LOGGER.error("Cannot launch the bot", ex);
+        }
     }
 }

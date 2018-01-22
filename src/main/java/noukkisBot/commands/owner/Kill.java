@@ -25,7 +25,7 @@ package noukkisBot.commands.owner;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import net.dv8tion.jda.core.JDA.Status;
+import noukkisBot.Main;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.contest.ContestWrk;
 import noukkisBot.wrks.music.MusicWrk;
@@ -52,17 +52,10 @@ public class Kill extends Command {
         ContestWrk.killAll();
         boolean restart = event.getMessage().getContentRaw().contains("r");
         event.replySuccess(restart ? "Bot will restart" : "Bot shut down");
-        new Thread(() -> {
-            while (!event.getJDA().getStatus().equals(Status.SHUTDOWN)) {
-                System.out.print("");
-            }
-            if (restart) {
-                System.exit(Help.KILL_STATUS);
-            } else {
-                System.exit(0);
-            }
-        }).start();
         event.getJDA().shutdown();
+        if (restart) {
+            Main.launch();
+        }
     }
 
 }

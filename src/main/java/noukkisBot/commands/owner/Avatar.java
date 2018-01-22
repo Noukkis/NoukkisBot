@@ -21,34 +21,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.music.miniCommands;
+package noukkisBot.commands.owner;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import noukkisBot.wrks.music.MusicWrk;
+import java.io.IOException;
+import net.dv8tion.jda.core.entities.Icon;
+import noukkisBot.helpers.Help;
 
 /**
  *
  * @author Noukkis
  */
-public class Next extends Command {
+public class Avatar extends Command {
 
-    public Next() {
-        this.name = "next";
-        this.aliases = new String[]{"skip"};
-        this.help = "Launch the next track";
-        this.category = new Category("Music");
+    public Avatar() {
+        this.name = "avatar";
+        this.category = new Category("Owner-only");
+        this.help = "Change avatar";
+        this.guildOnly = false;
+        this.ownerCommand = true;
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        if (wrk.isConnected()) {
-            wrk.getTrackManager().nextTrack();
-            event.reactSuccess();
-        } else {
-            event.reactError();
+        if (!event.getMessage().getAttachments().isEmpty()) {
+            Icon icon;
+            try {
+                icon = event.getMessage().getAttachments().get(0).getAsIcon();
+                Help.LOGGER.info("Avatar changed");
+                event.getJDA().getSelfUser().getManager().setAvatar(icon).queue();
+                event.reactSuccess();
+                return;
+            } catch (IOException ex) {
+            }
         }
+        event.reactError();
     }
 
 }

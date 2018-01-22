@@ -21,33 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.music.miniCommands;
+package noukkisBot.commands.others;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import noukkisBot.wrks.music.MusicWrk;
+import noukkisBot.helpers.Help;
 
 /**
  *
  * @author Noukkis
  */
-public class Next extends Command {
+public class NumberFact extends Command {
 
-    public Next() {
-        this.name = "next";
-        this.aliases = new String[]{"skip"};
-        this.help = "Launch the next track";
-        this.category = new Category("Music");
+    public NumberFact() {
+        this.name = "numberfact";
+        this.arguments = "<number>";
+        this.aliases = new String[]{"nf"};
+        this.help = "Reply with a random fact about your number";
+        this.guildOnly = false;
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        if (wrk.isConnected()) {
-            wrk.getTrackManager().nextTrack();
-            event.reactSuccess();
+        if (event.getArgs() != null && !event.getArgs().equals("")) {
+            String fact = Help.httpget("http://numbersapi.com/" + event.getArgs());
+            if (fact == null || fact.startsWith("Cannot")) {
+                event.reply("**fact** : " + event.getArgs() + " is not an integer.");
+            } else {
+                event.reply("**fact** : " + fact);
+            }
         } else {
-            event.reactError();
+            event.reply("**fact** : You're trying to break this bot.");
         }
     }
 

@@ -19,10 +19,7 @@ jar {
     manifest {
         attributes 'Main-Class': 'noukkisBot.Main'
     }
-    
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+   
 }
 
 repositories {

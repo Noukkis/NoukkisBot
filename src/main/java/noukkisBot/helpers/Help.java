@@ -31,14 +31,17 @@ import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import com.jagrosh.jdautilities.commandclient.examples.AboutCommand;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import java.awt.Color;
+import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,8 +53,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import net.dv8tion.jda.core.Permission;
@@ -71,6 +74,7 @@ public class Help {
     public final static Logger LOGGER = LoggerFactory.getLogger(Help.class);
     private final static String PROPS_FILE = "bot.conf";
     private final static String COMMANDS_PACKAGE = "noukkisBot.commands";
+    private final static Properties PROPS = new Properties();
 
     public final static int KILL_STATUS = 15;
     public final static String YES_REACT = "\uD83D\uDC4D";
@@ -85,10 +89,9 @@ public class Help {
     public static void init() throws IOException {
         LOGGER.info("Starting Bot using Java " + System.getProperty("java.version"));
         AudioSourceManagers.registerRemoteSources(MusicWrk.APM);
-        Properties props = new Properties();
-        props.load(new FileReader(PROPS_FILE));
-        BOT_TOKEN = props.getProperty("token");
-        OWNER_ID = props.getProperty("owner");
+        PROPS.load(new FileReader(PROPS_FILE));
+        BOT_TOKEN = PROPS.getProperty("token");
+        OWNER_ID = PROPS.getProperty("owner");
     }
 
     public static void deleteIn(Message msg, long time) {
@@ -177,6 +180,54 @@ public class Help {
             } catch (IOException ex) {
                 return null;
             }
+        } catch (UnsupportedEncodingException ex) {
+            return null;
+        }
+    }
+
+    public static String httpget(String url) {
+        InputStream is = null;
+        try {
+            is = new URL(url).openStream();
+            try {
+                
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+                return readAll(rd);
+            } finally {
+                is.close();
+            }
+        } catch (IOException ex) {
+        } finally {
+            try {
+                if (is != null) {
+                    is.close();
+                }
+            } catch (IOException ex) {
+            }
+        }
+        return null;
+    }
+
+    public static String readAll(BufferedReader rd) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            int cp;
+            while ((cp = rd.read()) != -1) {
+                sb.append((char) cp);
+            }
+            return sb.toString();
+        } catch (IOException ex) {
+        }
+        return null;
+    }
+
+    public static String getProp(String key) {
+        return PROPS.getProperty(key);
+    }
+    
+    public static String encodeURL(String s) {
+        try {
+            return URLEncoder.encode(s, "UTF-8");
         } catch (UnsupportedEncodingException ex) {
             return null;
         }
