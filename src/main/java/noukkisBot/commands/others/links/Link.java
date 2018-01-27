@@ -21,40 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.music;
+package noukkisBot.commands.others.links;
 
+import noukkisBot.wrks.link.LinkWrk;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
+import java.util.HashMap;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.VoiceChannel;
-import noukkisBot.wrks.music.MusicWrk;
 
 /**
  *
  * @author Noukkis
  */
-public class Join extends Command {
+public class Link extends Command {
 
-    public Join() {
-        this.name = "join";
-        this.help = "Join your voice channel";
-        this.category = new Category("Music");
-        this.botPermissions = new Permission[]{Permission.VOICE_CONNECT, Permission.VOICE_SPEAK};
+    public Link() {
+        this.name = "link";
+        this.category = new Category("Links");
+        this.guildOnly = true;
+        this.arguments = "<key>";
+        this.help = "Link the vocal channel you are connected to with other guilds";
+        this.botPermissions = new Permission[]{Permission.VOICE_SPEAK, Permission.VOICE_CONNECT};
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        VoiceChannel chan = event.getMember().getVoiceState().getChannel();
-        if (chan != null) {
-            if (wrk.connect(chan)) {
-                wrk.createMessageVisualPlayer(event, "Joined");
-            } else {
-                event.reactError();
-            }
+        String key = event.getArgs();
+        VoiceChannel vc = event.getMember().getVoiceState().getChannel();
+        if(vc != null) {
+            event.getGuild().getAudioManager().openAudioConnection(vc);
         } else {
-            event.replyError("You're not connected to any VoiceChannel");
+            event.replyError("You must be connected to a channel");
         }
+        LinkWrk.getInstance(key).addGuild(event.getGuild());
     }
-
 }

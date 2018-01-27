@@ -21,41 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.contests;
+package noukkisBot.commands.others.links;
 
+import noukkisBot.wrks.link.LinkWrk;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.VoiceChannel;
-import noukkisBot.wrks.contest.ContestWrk;
 
 /**
  *
  * @author Noukkis
  */
-public class Contest extends Command {
+public class Unlink extends Command {
 
-    public Contest() {
-        this.name = "contest";
-        this.help = "Create a contest between the members of your Voice Channel";
-        this.category = new Category("Contest");
-        this.botPermissions = new Permission[]{Permission.NICKNAME_MANAGE, Permission.MESSAGE_MANAGE};
+    public Unlink() {
+        this.name = "unlink";
+        this.category = new Category("Links");
+        this.guildOnly = true;
+        this.help = "Unlink this guild from others guilds";
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        VoiceChannel chan = event.getMember().getVoiceState().getChannel();
-        if (chan != null) {
-            if (ContestWrk.getInstance(event.getGuild()) != null) {
-                ContestWrk.getInstance(event.getGuild()).kill();
-            }
-            event.getAuthor().openPrivateChannel().queue((pc) -> {
-                pc.sendMessage("Do you participate to this contest ?")
-                        .queue((msg) -> ContestWrk.getInstance(msg, chan).start(event.getMember()));
-            });
-        } else {
-            event.replyError("You're not connected to any VoiceChannel");
-        }
+        LinkWrk.removeGuild(event.getGuild());
+        event.reactSuccess();
     }
-
 }

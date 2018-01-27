@@ -21,38 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.contests;
+package noukkisBot.commands.games;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.VoiceChannel;
-import noukkisBot.wrks.contest.ContestWrk;
+import noukkisBot.wrks.music.MusicWrk;
 
 /**
  *
  * @author Noukkis
  */
-public class Contest extends Command {
+public class Blindtest extends Command {
 
-    public Contest() {
-        this.name = "contest";
-        this.help = "Create a contest between the members of your Voice Channel";
-        this.category = new Category("Contest");
-        this.botPermissions = new Permission[]{Permission.NICKNAME_MANAGE, Permission.MESSAGE_MANAGE};
+    public Blindtest() {
+        this.name = "blindtest";
+        this.aliases = new String[]{"bt"};
+        this.help = "Permet de jouer de la musique choisie en pm";
+        this.category = new Category("Games");
+        this.botPermissions = new Permission[]{Permission.VOICE_CONNECT,
+            Permission.VOICE_SPEAK};
     }
 
     @Override
     protected void execute(CommandEvent event) {
+        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
         VoiceChannel chan = event.getMember().getVoiceState().getChannel();
         if (chan != null) {
-            if (ContestWrk.getInstance(event.getGuild()) != null) {
-                ContestWrk.getInstance(event.getGuild()).kill();
+            if (wrk.connect(chan)) {
+                wrk.createMessageVisualPlayerForBlindTest(event, "Joined");
+            } else {
+                event.reactError();
             }
-            event.getAuthor().openPrivateChannel().queue((pc) -> {
-                pc.sendMessage("Do you participate to this contest ?")
-                        .queue((msg) -> ContestWrk.getInstance(msg, chan).start(event.getMember()));
-            });
         } else {
             event.replyError("You're not connected to any VoiceChannel");
         }

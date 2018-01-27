@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.music.visualPlayer.TopicVisualPlayer;
@@ -49,6 +50,7 @@ import noukkisBot.wrks.music.visualPlayer.TopicVisualPlayer;
 public class MusicWrk {
 
     private static final Map<Guild, MusicWrk> INSTANCES = new HashMap<>();
+    private static final Map<PrivateChannel, MusicWrk> INSTANCES_PRIVATE = new HashMap<>();
     public static final AudioPlayerManager APM = new DefaultAudioPlayerManager();
 
     private final Guild guild;
@@ -62,10 +64,16 @@ public class MusicWrk {
         return INSTANCES.get(guild);
     }
 
+    public static MusicWrk getInstancePM(PrivateChannel pc) {
+        return INSTANCES_PRIVATE.get(pc);
+    }
+
     public static void killAll() {
         for (MusicWrk wrk : INSTANCES.values()) {
             wrk.disconnect();
         }
+        INSTANCES.clear();
+        INSTANCES_PRIVATE.clear();
     }
 
     private MusicWrk(Guild guild) {
@@ -192,5 +200,15 @@ public class MusicWrk {
         } else {
             event.replyError("I'm not connected to any voice channel");
         }
+    }
+
+    public void createMessageVisualPlayerForBlindTest(CommandEvent event, String reply) {
+        event.getAuthor().openPrivateChannel().queue((pc) -> {
+            INSTANCES_PRIVATE.put(pc, this);
+            pc.sendMessage(event.getClient().getSuccess() + " " + reply).queue((msg) -> {
+                deleteMessageVisualPlayer();
+                tm.setVisualPlayer(new MessageVisualPlayer(msg, tm));
+            });
+        });
     }
 }

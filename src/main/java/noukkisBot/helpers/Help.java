@@ -53,11 +53,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Level;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import noukkisBot.wrks.music.MusicWrk;
@@ -95,12 +95,14 @@ public class Help {
     }
 
     public static void deleteIn(Message msg, long time) {
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                msg.delete().queue();
-            }
-        }, time);
+        if (msg.getChannelType() == ChannelType.TEXT) {
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    msg.delete().queue();
+                }
+            }, time);
+        }
     }
 
     public static void setCommands(CommandClientBuilder ccb) {
@@ -190,7 +192,7 @@ public class Help {
         try {
             is = new URL(url).openStream();
             try {
-                
+
                 BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
                 return readAll(rd);
             } finally {
@@ -224,7 +226,7 @@ public class Help {
     public static String getProp(String key) {
         return PROPS.getProperty(key);
     }
-    
+
     public static String encodeURL(String s) {
         try {
             return URLEncoder.encode(s, "UTF-8");

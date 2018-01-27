@@ -131,7 +131,7 @@ public class ContestWrk {
         }).start();
     }
 
-    private void kill() {
+    public void kill() {
         INSTANCES.remove(chan.getGuild());
         running = false;
         if (msgs.isEmpty()) {

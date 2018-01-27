@@ -21,40 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.contests;
+package noukkisBot.commands.games;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.VoiceChannel;
-import noukkisBot.wrks.contest.ContestWrk;
+import net.dv8tion.jda.core.entities.GuildVoiceState;
+import noukkisBot.wrks.loupgaroup.LoupGarouWrk;
 
 /**
  *
  * @author Noukkis
  */
-public class Contest extends Command {
+public class LoupGarou extends Command {
 
-    public Contest() {
-        this.name = "contest";
-        this.help = "Create a contest between the members of your Voice Channel";
-        this.category = new Category("Contest");
-        this.botPermissions = new Permission[]{Permission.NICKNAME_MANAGE, Permission.MESSAGE_MANAGE};
+    public LoupGarou() {
+        this.name = "loupgarou";
+        this.aliases = new String[]{"lg"};
+        this.help = "Commencer une partie de loup garou";
+        this.category = new Category("Games");
+        this.botPermissions = new Permission[]{Permission.VOICE_CONNECT,
+            Permission.VOICE_SPEAK, Permission.VOICE_MUTE_OTHERS, Permission.VOICE_MOVE_OTHERS};
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        VoiceChannel chan = event.getMember().getVoiceState().getChannel();
-        if (chan != null) {
-            if (ContestWrk.getInstance(event.getGuild()) != null) {
-                ContestWrk.getInstance(event.getGuild()).kill();
-            }
-            event.getAuthor().openPrivateChannel().queue((pc) -> {
-                pc.sendMessage("Do you participate to this contest ?")
-                        .queue((msg) -> ContestWrk.getInstance(msg, chan).start(event.getMember()));
+        if (LoupGarouWrk.getInstance(event.getGuild()) != null) {
+            LoupGarouWrk.getInstance(event.getGuild()).stop();
+        }
+        GuildVoiceState gvs = event.getMember().getVoiceState();
+        if (gvs.inVoiceChannel()) {
+            event.reply("Création du jeu...", (msg) -> {
+                LoupGarouWrk.getInstance(msg, gvs.getChannel()).init();
             });
-        } else {
-            event.replyError("You're not connected to any VoiceChannel");
         }
     }
 
