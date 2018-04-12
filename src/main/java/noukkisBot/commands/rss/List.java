@@ -26,10 +26,11 @@ package noukkisBot.commands.rss;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
+import com.sun.syndication.feed.synd.SyndFeed;
 import java.util.ArrayList;
 import java.util.HashMap;
+import javafx.util.Pair;
 import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.MessageBuilder.Formatting;
 import net.dv8tion.jda.core.entities.Member;
 import noukkisBot.wrks.rss.RssWrk;
 
@@ -47,15 +48,18 @@ public class List extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-        HashMap<String, ArrayList<Member>> feeds = RssWrk.getInstance(event.getGuild()).getFeeds();
+        HashMap<String, Pair<SyndFeed, ArrayList<Member>>>  feeds = RssWrk.getInstance(event.getGuild()).getFeeds();
         int i = 1;
         MessageBuilder builder = new MessageBuilder("RSS Feeds List :\n");
+        String content = "";
         for (String address : feeds.keySet()) {
-            Formatting format = feeds.get(address).contains(event.getMember())
-                    ? Formatting.BOLD : Formatting.BLOCK;
-            builder.append("\n").append(i + ". " + address, format);
+            String format = feeds.get(address).getValue().contains(event.getMember())
+                    ? "+" : "-";
+            SyndFeed feed = feeds.get(address).getKey();
+            content += "\n" + format + "    " + i + ". " + feed.getTitle();
             i++;
         }
+        builder.appendCodeBlock(content, "diff");
         event.reply(builder.build());
     }
 

@@ -29,7 +29,6 @@ import com.sun.syndication.io.FeedException;
 import com.sun.syndication.io.SyndFeedInput;
 import com.sun.syndication.io.XmlReader;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,13 +36,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.util.Pair;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.jdom.Element;
 
@@ -61,7 +61,7 @@ public class RssWrk implements Runnable {
     private TextChannel chan;
     private SyndFeedInput input;
     private Date lastFetch;
-    private HashMap<String, ArrayList<Member>> feeds;
+    private HashMap<String, Pair<SyndFeed, ArrayList<Member>>> feeds;
 
     public static RssWrk getInstance(Guild guild) {
         if (!INSTANCES.containsKey(guild)) {
@@ -96,7 +96,7 @@ public class RssWrk implements Runnable {
         INSTANCES.remove(chan.getGuild());
     }
 
-    public HashMap<String, ArrayList<Member>> getFeeds() {
+    public HashMap<String, Pair<SyndFeed, ArrayList<Member>>> getFeeds() {
         return feeds;
     }
 
@@ -125,13 +125,14 @@ public class RssWrk implements Runnable {
     public boolean addFeed(String address, Member member) {
         try {
             URL url = new URL(address);
-            input.build(new XmlReader(url));
+            SyndFeed feed = input.build(new XmlReader(url));
+            feed.setUri(address);
             if (feeds.containsKey(address)) {
-                feeds.get(address).add(member);
+                feeds.get(address).getValue().add(member);
             } else {
                 ArrayList<Member> list = new ArrayList<>();
                 list.add(member);
-                feeds.put(address, list);
+                feeds.put(address, new Pair<>(feed, list));
             }
             return true;
         } catch (IOException | FeedException ex) {
@@ -141,8 +142,8 @@ public class RssWrk implements Runnable {
 
     public boolean removeFeed(String address, Member member) {
         if (feeds.containsKey(address)) {
-            boolean res = feeds.get(address).remove(member);
-            if (feeds.get(address).isEmpty()) {
+            boolean res = feeds.get(address).getValue().remove(member);
+            if (feeds.get(address).getValue().isEmpty()) {
                 feeds.remove(address);
             }
             return res;
@@ -159,10 +160,11 @@ public class RssWrk implements Runnable {
             try {
                 URL url = new URL(address);
                 SyndFeed feed = input.build(new XmlReader(url));
+                feed.setUri(address);
                 for (Object entry : feed.getEntries()) {
                     SyndEntryImpl se = (SyndEntryImpl) entry;
                     if (se.getPublishedDate().after(lastFetch)) {
-                        writeMessageForEntry(se, feeds.get(address));
+                        writeMessageForEntry(se, feeds.get(address).getValue());
                     }
                 }
             } catch (IOException | FeedException ex) {
@@ -184,5 +186,16 @@ public class RssWrk implements Runnable {
             msgBuilder.append(sub);
         }
         chan.sendMessage(msgBuilder.build()).queue();
+    }
+
+    public void search(Member member, MessageChannel channel) {
+        ArrayList<SyndFeed> list = new ArrayList<>();
+        feeds.forEach((key, value) -> {
+            if (!value.getValue().contains(member)) {
+                list.add(value.getKey());
+            }
+        });
+        RssSearchResult rsr = new RssSearchResult(chan, member, list);
+        rsr.start();
     }
 }

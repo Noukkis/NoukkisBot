@@ -21,13 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.wrks.music;
+package noukkisBot.wrks.rss;
 
-import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+import com.sun.syndication.feed.synd.SyndFeed;
 import java.util.ArrayList;
 import java.util.List;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import noukkisBot.helpers.Help;
@@ -37,26 +36,24 @@ import noukkisBot.wrks.ReactButtonsMaker;
  *
  * @author Noukkis
  */
-public class SearchResult {
+public class RssSearchResult {
 
     private static final int MAX = 5;
 
-    private final List<AudioTrack> tracks;
-    private final List<AudioTrack> currents;
+    private final List<SyndFeed> feeds;
+    private final List<SyndFeed> currents;
     private final TextChannel chan;
-    private final String keyword;
+    private final Member member;
     private final int maxPage;
-    private final Message cmdMsg;
     private int page;
 
-    public SearchResult(CommandEvent ce, List<AudioTrack> tracks, String keywords) {
-        this.tracks = tracks;
+    public RssSearchResult(TextChannel chan, Member member, List<SyndFeed> feeds) {
+        this.feeds = feeds;
         this.currents = new ArrayList<>();
-        this.chan = ce.getTextChannel();
-        this.keyword = keywords;
-        this.maxPage = (tracks.size() / MAX);
+        this.chan = chan;
+        this.member = member;
+        this.maxPage = (feeds.size() / MAX);
         this.page = 0;
-        this.cmdMsg = ce.getMessage();
     }
 
     void start() {
@@ -64,7 +61,7 @@ public class SearchResult {
         chan.sendMessage(createMsg()).queue((msg) -> {
             rbm.add(msg, "❌", (event) -> stop(msg));
             rbm.add(msg, "◀", (event) -> previous(msg));
-            int max = tracks.size() > MAX ? MAX : tracks.size();
+            int max = feeds.size() > MAX ? MAX : feeds.size();
             for (int i = 0; i < max; i++) {
                 final int j = i;
                 rbm.add(msg, Help.NUMBERS_REACTS[i + 1], (event) -> select(j, msg));
@@ -76,13 +73,12 @@ public class SearchResult {
     private String createMsg() {
         currents.clear();
         int min = page * MAX;
-        String msg = "**Search Results**\n";
-        msg += "for keywords \"" + keyword + "\"```markdown\n";
+        String msg = "**Available Feeds**\n```markdown\n";
 
-        for (int i = min; i < min + 5 && i < tracks.size(); i++) {
-            currents.add(tracks.get(i));
-            AudioTrackInfo infos = tracks.get(i).getInfo();
-            msg += "\n" + (i - min + 1) + ". " + infos.title;
+        for (int i = min; i < min + MAX && i < feeds.size(); i++) {
+            currents.add(feeds.get(i));
+            String title = feeds.get(i).getTitle();
+            msg += "\n" + (i - min + 1) + ". " + title;
         }
         return msg + "```\nPage " + (page + 1) + "/" + maxPage;
     }
@@ -104,18 +100,16 @@ public class SearchResult {
     }
 
     private void select(int i, Message msg) {
-        MusicWrk wrk = MusicWrk.getInstance(chan.getGuild());
-        TrackManager tm = wrk.getTrackManager();
+        RssWrk wrk = RssWrk.getInstance(chan.getGuild());
         int index = page * MAX + i;
-        if (index < tracks.size()) {
-            tm.queue(tracks.get(index));
+        if (index < feeds.size()) {
+            wrk.addFeed(feeds.get(index).getUri(), member);
             stop(msg);
         }
     }
 
     private void stop(Message msg) {
         msg.delete().queue();
-        cmdMsg.delete().queue();
     }
 
 }

@@ -42,10 +42,15 @@ public class Add extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-        if(RssWrk.getInstance(event.getGuild()).addFeed(event.getArgs(), event.getMember())) {
-            event.reactSuccess();
+        boolean ok = false;
+        if (event.getArgs().isEmpty()) {
+            RssWrk.getInstance(event.getGuild()).search(event.getMember(), event.getChannel());
         } else {
-            event.reactError();
+            if (RssWrk.getInstance(event.getGuild()).addFeed(event.getArgs(), event.getMember())) {
+                event.reactSuccess();
+            } else {
+                event.reactError();
+            }
         }
     }
 

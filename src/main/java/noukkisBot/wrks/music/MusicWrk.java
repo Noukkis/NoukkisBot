@@ -177,12 +177,12 @@ public class MusicWrk {
                 public void trackLoaded(AudioTrack track) {
                     List<AudioTrack> l = new ArrayList<>();
                     l.add(track);
-                    new SearchResult(event, l, keywords).start();
+                    new AudioSearchResult(event, l, keywords).start();
                 }
 
                 @Override
                 public void playlistLoaded(AudioPlaylist playlist) {
-                    new SearchResult(event, playlist.getTracks(), keywords).start();
+                    new AudioSearchResult(event, playlist.getTracks(), keywords).start();
                 }
 
                 @Override
