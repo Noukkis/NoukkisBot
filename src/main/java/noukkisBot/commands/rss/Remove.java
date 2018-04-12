@@ -21,41 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.games;
+package noukkisBot.commands.rss;
 
 import com.jagrosh.jdautilities.commandclient.Command;
+import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.VoiceChannel;
-import noukkisBot.wrks.music.MusicWrk;
+import noukkisBot.wrks.rss.RssWrk;
 
 /**
  *
  * @author Noukkis
  */
-public class Blindtest extends Command {
+public class Remove extends Command {
 
-    public Blindtest() {
-        this.name = "blindtest";
-        this.aliases = new String[]{"bt"};
-        this.help = "Play music without others knowing what is played";
-        this.category = new Category("Games");
-        this.botPermissions = new Permission[]{Permission.VOICE_CONNECT,
-            Permission.VOICE_SPEAK};
+    public Remove() {
+        this.name = "rssrem";
+        this.category = new Category("RSS");
+        this.help = "Unsubscribe to a RSS feed";
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        VoiceChannel chan = event.getMember().getVoiceState().getChannel();
-        if (chan != null) {
-            if (wrk.connect(chan)) {
-                wrk.createMessageVisualPlayerForBlindTest(event, "Joined");
-            } else {
-                event.reactError();
-            }
+        if(RssWrk.getInstance(event.getGuild()).removeFeed(event.getArgs(), event.getMember())) {
+            event.reactSuccess();
         } else {
-            event.replyError("You're not connected to any VoiceChannel");
+            event.reactError();
         }
     }
 

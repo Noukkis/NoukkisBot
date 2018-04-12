@@ -55,7 +55,6 @@ public class MessageVisualPlayer extends VisualPlayer {
         this.tm = tm;
         this.ras = new RestActionScheduler<>(1000);
         ReactButtonsMaker rbm = ReactButtonsMaker.getInstance();
-        rbm.add(msg, "⏹", (event) -> tm.clear());
         rbm.add(msg, "⏯", (event) -> tm.pauseContinue());
         rbm.add(msg, "⏭", (event) -> tm.nextTrack());
         rbm.add(msg, "🔀", (event) -> tm.shuffle());

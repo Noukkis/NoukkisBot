@@ -29,6 +29,7 @@ import noukkisBot.Main;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.contest.ContestWrk;
 import noukkisBot.wrks.music.MusicWrk;
+import noukkisBot.wrks.rss.RssWrk;
 
 /**
  *
@@ -50,6 +51,7 @@ public class Kill extends Command {
         Help.LOGGER.info("Killed by command");
         MusicWrk.killAll();
         ContestWrk.killAll();
+        RssWrk.killAll();
         boolean restart = event.getMessage().getContentRaw().contains("r");
         event.replySuccess(restart ? "Bot will restart" : "Bot shut down");
         event.getJDA().shutdown();

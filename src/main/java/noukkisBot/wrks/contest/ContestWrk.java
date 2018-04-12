@@ -128,7 +128,7 @@ public class ContestWrk {
             }
             msg.editMessage(s + "```").queue();
             running = true;
-        }).start();
+        }, "Contest-" + chan.getGuild().getName()).start();
     }
 
     public void kill() {

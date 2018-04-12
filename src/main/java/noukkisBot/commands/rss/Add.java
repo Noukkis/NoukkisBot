@@ -21,29 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.music.miniCommands;
+package noukkisBot.commands.rss;
 
 import com.jagrosh.jdautilities.commandclient.Command;
+import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import noukkisBot.wrks.music.MusicWrk;
+import noukkisBot.wrks.rss.RssWrk;
 
 /**
  *
  * @author Noukkis
  */
-public class Stop extends Command {
+public class Add extends Command {
 
-    public Stop() {
-        this.name = "stop";
-        this.help = "Stop the song and clear the queue";
-        this.category = new Category("Music");
+    public Add() {
+        this.name = "rssadd";
+        this.category = new Category("RSS");
+        this.help = "Subscribe to a RSS feed";
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        if (wrk.isConnected()) {
-            wrk.getTrackManager().clear();
+        if(RssWrk.getInstance(event.getGuild()).addFeed(event.getArgs(), event.getMember())) {
             event.reactSuccess();
         } else {
             event.reactError();

@@ -26,8 +26,6 @@ package noukkisBot.commands.games;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.GuildVoiceState;
-import noukkisBot.wrks.loupgaroup.LoupGarouWrk;
 
 /**
  *
@@ -46,15 +44,16 @@ public class LoupGarou extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-        if (LoupGarouWrk.getInstance(event.getGuild()) != null) {
-            LoupGarouWrk.getInstance(event.getGuild()).stop();
-        }
-        GuildVoiceState gvs = event.getMember().getVoiceState();
-        if (gvs.inVoiceChannel()) {
-            event.reply("Création du jeu...", (msg) -> {
-                LoupGarouWrk.getInstance(msg, gvs.getChannel()).init();
-            });
-        }
+//        if (LoupGarouWrk.getInstance(event.getGuild()) != null) {
+//            LoupGarouWrk.getInstance(event.getGuild()).stop();
+//        }
+//        GuildVoiceState gvs = event.getMember().getVoiceState();
+//        if (gvs.inVoiceChannel()) {
+//            event.reply("Création du jeu...", (msg) -> {
+//                LoupGarouWrk.getInstance(msg, gvs.getChannel()).init();
+//            });
+//        }
+        event.replyWarning("Fonctionnalitée non-implémentée");
     }
 
 }

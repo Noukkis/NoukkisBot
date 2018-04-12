@@ -21,42 +21,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.games;
+package noukkisBot.commands.rss;
 
 import com.jagrosh.jdautilities.commandclient.Command;
+import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.VoiceChannel;
-import noukkisBot.wrks.music.MusicWrk;
+import java.util.ArrayList;
+import java.util.HashMap;
+import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.MessageBuilder.Formatting;
+import net.dv8tion.jda.core.entities.Member;
+import noukkisBot.wrks.rss.RssWrk;
 
 /**
  *
  * @author Noukkis
  */
-public class Blindtest extends Command {
+public class List extends Command {
 
-    public Blindtest() {
-        this.name = "blindtest";
-        this.aliases = new String[]{"bt"};
-        this.help = "Play music without others knowing what is played";
-        this.category = new Category("Games");
-        this.botPermissions = new Permission[]{Permission.VOICE_CONNECT,
-            Permission.VOICE_SPEAK};
+    public List() {
+        this.name = "rsslist";
+        this.category = new Category("RSS");
+        this.help = "List the RSS feeds of this Guild";
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        MusicWrk wrk = MusicWrk.getInstance(event.getGuild());
-        VoiceChannel chan = event.getMember().getVoiceState().getChannel();
-        if (chan != null) {
-            if (wrk.connect(chan)) {
-                wrk.createMessageVisualPlayerForBlindTest(event, "Joined");
-            } else {
-                event.reactError();
-            }
-        } else {
-            event.replyError("You're not connected to any VoiceChannel");
+        HashMap<String, ArrayList<Member>> feeds = RssWrk.getInstance(event.getGuild()).getFeeds();
+        int i = 1;
+        MessageBuilder builder = new MessageBuilder("RSS Feeds List :\n");
+        for (String address : feeds.keySet()) {
+            Formatting format = feeds.get(address).contains(event.getMember())
+                    ? Formatting.BOLD : Formatting.BLOCK;
+            builder.append("\n").append(i + ". " + address, format);
+            i++;
         }
+        event.reply(builder.build());
     }
 
 }

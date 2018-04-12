@@ -1,0 +1,188 @@
+/*
+ * The MIT License
+ *
+ * Copyright 2018 Noukkis.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package noukkisBot.wrks.rss;
+
+import com.sun.syndication.feed.synd.SyndEntryImpl;
+import com.sun.syndication.feed.synd.SyndFeed;
+import com.sun.syndication.io.FeedException;
+import com.sun.syndication.io.SyndFeedInput;
+import com.sun.syndication.io.XmlReader;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.TextChannel;
+import org.jdom.Element;
+
+/**
+ *
+ * @author Noukkis
+ */
+public class RssWrk implements Runnable {
+
+    private static final int SLEEP = 1000;
+    private static final Map<Guild, RssWrk> INSTANCES = new HashMap<>();
+    private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+
+    private boolean running;
+    private TextChannel chan;
+    private SyndFeedInput input;
+    private Date lastFetch;
+    private HashMap<String, ArrayList<Member>> feeds;
+
+    public static RssWrk getInstance(Guild guild) {
+        if (!INSTANCES.containsKey(guild)) {
+            RssWrk rss = new RssWrk(guild);
+            INSTANCES.put(guild, rss);
+            new Thread(rss, "RSS-" + guild.getName()).start();
+        }
+        return INSTANCES.get(guild);
+    }
+
+    public static void killAll() {
+        for (RssWrk wrk : INSTANCES.values()) {
+            wrk.kill();
+        }
+    }
+
+    private RssWrk(Guild guild) {
+        this.chan = guild.getDefaultChannel();
+        this.feeds = new HashMap<>();
+        this.running = false;
+        this.input = new SyndFeedInput();
+        this.lastFetch = new Date();
+        System.out.println(lastFetch);
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void kill() {
+        running = false;
+        INSTANCES.remove(chan.getGuild());
+    }
+
+    public HashMap<String, ArrayList<Member>> getFeeds() {
+        return feeds;
+    }
+
+    @Override
+    public void run() {
+        running = true;
+        while (running) {
+            Date now = new Date();
+            fetch();
+            lastFetch = now;
+            try {
+                Thread.sleep(SLEEP);
+            } catch (InterruptedException ex) {
+            }
+        }
+    }
+
+    public void setChan(TextChannel chan) {
+        this.chan = chan;
+    }
+
+    public TextChannel getChan() {
+        return chan;
+    }
+
+    public boolean addFeed(String address, Member member) {
+        try {
+            URL url = new URL(address);
+            input.build(new XmlReader(url));
+            if (feeds.containsKey(address)) {
+                feeds.get(address).add(member);
+            } else {
+                ArrayList<Member> list = new ArrayList<>();
+                list.add(member);
+                feeds.put(address, list);
+            }
+            return true;
+        } catch (IOException | FeedException ex) {
+        }
+        return false;
+    }
+
+    public boolean removeFeed(String address, Member member) {
+        if (feeds.containsKey(address)) {
+            boolean res = feeds.get(address).remove(member);
+            if (feeds.get(address).isEmpty()) {
+                feeds.remove(address);
+            }
+            return res;
+        }
+        return false;
+    }
+
+    public boolean deleteFeed(String address) {
+        return feeds.remove(address) != null;
+    }
+
+    private void fetch() {
+        for (String address : feeds.keySet()) {
+            try {
+                URL url = new URL(address);
+                SyndFeed feed = input.build(new XmlReader(url));
+                for (Object entry : feed.getEntries()) {
+                    SyndEntryImpl se = (SyndEntryImpl) entry;
+                    if (se.getPublishedDate().after(lastFetch)) {
+                        writeMessageForEntry(se, feeds.get(address));
+                    }
+                }
+            } catch (IOException | FeedException ex) {
+                Logger.getLogger(RssWrk.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private void writeMessageForEntry(SyndEntryImpl se, ArrayList<Member> subs) {
+        EmbedBuilder builder = new EmbedBuilder();
+        builder.setTitle(se.getTitle(), se.getUri())
+                .setAuthor(se.getAuthor())
+                .setFooter(DATE_FORMAT.format(se.getPublishedDate()), null);
+        for (Element elem : (List<Element>) se.getForeignMarkup()) {
+            builder.addField(elem.getName(), elem.getText(), true);
+        }
+        MessageBuilder msgBuilder = new MessageBuilder(builder);
+        for (Member sub : subs) {
+            msgBuilder.append(sub);
+        }
+        chan.sendMessage(msgBuilder.build()).queue();
+    }
+}
