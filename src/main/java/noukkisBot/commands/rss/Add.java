@@ -38,13 +38,16 @@ public class Add extends Command {
         this.name = "rssadd";
         this.category = new Category("RSS");
         this.help = "Subscribe to a RSS feed";
+        this.arguments = "<rss feed link>";
     }
 
     @Override
     protected void execute(CommandEvent event) {
         boolean ok = false;
         if (event.getArgs().isEmpty()) {
-            RssWrk.getInstance(event.getGuild()).search(event.getMember(), event.getChannel());
+            if(!RssWrk.getInstance(event.getGuild()).search(event.getMember(), event.getTextChannel())){
+                event.reactError();
+            }
         } else {
             if (RssWrk.getInstance(event.getGuild()).addFeed(event.getArgs(), event.getMember())) {
                 event.reactSuccess();

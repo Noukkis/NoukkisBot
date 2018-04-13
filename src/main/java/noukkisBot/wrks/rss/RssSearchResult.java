@@ -29,6 +29,7 @@ import java.util.List;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.User;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.ReactButtonsMaker;
 
@@ -36,14 +37,14 @@ import noukkisBot.wrks.ReactButtonsMaker;
  *
  * @author Noukkis
  */
-public class RssSearchResult {
+public abstract class RssSearchResult {
 
     private static final int MAX = 5;
 
     private final List<SyndFeed> feeds;
     private final List<SyndFeed> currents;
     private final TextChannel chan;
-    private final Member member;
+    private final User author;
     private final int maxPage;
     private int page;
 
@@ -51,22 +52,26 @@ public class RssSearchResult {
         this.feeds = feeds;
         this.currents = new ArrayList<>();
         this.chan = chan;
-        this.member = member;
-        this.maxPage = (feeds.size() / MAX);
+        this.author = member.getUser();
+        this.maxPage = (feeds.size() / MAX) + 1;
         this.page = 0;
     }
 
     void start() {
         ReactButtonsMaker rbm = ReactButtonsMaker.getInstance();
         chan.sendMessage(createMsg()).queue((msg) -> {
-            rbm.add(msg, "❌", (event) -> stop(msg));
-            rbm.add(msg, "◀", (event) -> previous(msg));
+            rbm.add(msg, "❌", author, (event) -> stop(msg));
+            if (feeds.size() > 5) {
+                rbm.add(msg, "◀", author, (event) -> previous(msg));
+            }
             int max = feeds.size() > MAX ? MAX : feeds.size();
             for (int i = 0; i < max; i++) {
                 final int j = i;
-                rbm.add(msg, Help.NUMBERS_REACTS[i + 1], (event) -> select(j, msg));
+                rbm.add(msg, Help.NUMBERS_REACTS[i + 1], author, (event) -> select(j, msg));
             }
-            rbm.add(msg, "▶", (event) -> next(msg));
+            if (feeds.size() > 5) {
+                rbm.add(msg, "▶", author, (event) -> next(msg));
+            }
         });
     }
 
@@ -100,10 +105,9 @@ public class RssSearchResult {
     }
 
     private void select(int i, Message msg) {
-        RssWrk wrk = RssWrk.getInstance(chan.getGuild());
         int index = page * MAX + i;
         if (index < feeds.size()) {
-            wrk.addFeed(feeds.get(index).getUri(), member);
+            isSelected(feeds.get(index));
             stop(msg);
         }
     }
@@ -111,5 +115,7 @@ public class RssSearchResult {
     private void stop(Message msg) {
         msg.delete().queue();
     }
+
+    public abstract void isSelected(SyndFeed selected);
 
 }

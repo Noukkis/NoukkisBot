@@ -38,14 +38,22 @@ public class Remove extends Command {
         this.name = "rssrem";
         this.category = new Category("RSS");
         this.help = "Unsubscribe to a RSS feed";
+        this.arguments = "<rss feed link>";
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        if(RssWrk.getInstance(event.getGuild()).removeFeed(event.getArgs(), event.getMember())) {
-            event.reactSuccess();
+        boolean ok = false;
+        if (event.getArgs().isEmpty()) {
+            if (!RssWrk.getInstance(event.getGuild()).searchRemove(event.getMember(), event.getTextChannel())) {
+                event.reactError();
+            }
         } else {
-            event.reactError();
+            if (RssWrk.getInstance(event.getGuild()).removeFeed(event.getArgs(), event.getMember())) {
+                event.reactSuccess();
+            } else {
+                event.reactError();
+            }
         }
     }
 

@@ -39,15 +39,24 @@ public class Delete extends Command {
         this.name = "rssdel";
         this.category = new Category("RSS");
         this.help = "Unsubscribe everyone to a RSS feed and delete it";
+        this.arguments = "<rss feed link>";
         this.userPermissions = new Permission[]{Permission.MANAGE_CHANNEL};
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        if(RssWrk.getInstance(event.getGuild()).deleteFeed(event.getArgs())) {
-            event.reactSuccess();
+
+        boolean ok = false;
+        if (event.getArgs().isEmpty()) {
+            if (!RssWrk.getInstance(event.getGuild()).searchDelete(event.getMember(), event.getTextChannel())) {
+                event.reactError();
+            }
         } else {
-            event.reactError();
+            if (RssWrk.getInstance(event.getGuild()).deleteFeed(event.getArgs())) {
+                event.reactSuccess();
+            } else {
+                event.reactError();
+            }
         }
     }
 

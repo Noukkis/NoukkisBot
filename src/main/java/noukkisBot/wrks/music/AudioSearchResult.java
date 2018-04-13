@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.User;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.ReactButtonsMaker;
 
@@ -46,7 +47,7 @@ public class AudioSearchResult {
     private final TextChannel chan;
     private final String keyword;
     private final int maxPage;
-    private final Message cmdMsg;
+    private final User author;
     private int page;
 
     public AudioSearchResult(CommandEvent ce, List<AudioTrack> tracks, String keywords) {
@@ -54,22 +55,22 @@ public class AudioSearchResult {
         this.currents = new ArrayList<>();
         this.chan = ce.getTextChannel();
         this.keyword = keywords;
-        this.maxPage = (tracks.size() / MAX);
+        this.maxPage = (tracks.size() / MAX) + 1;
         this.page = 0;
-        this.cmdMsg = ce.getMessage();
+        this.author = ce.getAuthor();
     }
 
     void start() {
         ReactButtonsMaker rbm = ReactButtonsMaker.getInstance();
         chan.sendMessage(createMsg()).queue((msg) -> {
-            rbm.add(msg, "❌", (event) -> stop(msg));
-            rbm.add(msg, "◀", (event) -> previous(msg));
+            rbm.add(msg, "❌", author, (event) -> stop(msg));
+            rbm.add(msg, "◀", author, (event) -> previous(msg));
             int max = tracks.size() > MAX ? MAX : tracks.size();
             for (int i = 0; i < max; i++) {
                 final int j = i;
-                rbm.add(msg, Help.NUMBERS_REACTS[i + 1], (event) -> select(j, msg));
+                rbm.add(msg, Help.NUMBERS_REACTS[i + 1], author, (event) -> select(j, msg));
             }
-            rbm.add(msg, "▶", (event) -> next(msg));
+            rbm.add(msg, "▶", author, (event) -> next(msg));
         });
     }
 
@@ -115,7 +116,6 @@ public class AudioSearchResult {
 
     private void stop(Message msg) {
         msg.delete().queue();
-        cmdMsg.delete().queue();
     }
 
 }

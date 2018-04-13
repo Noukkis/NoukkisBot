@@ -156,7 +156,8 @@ public class RssWrk implements Runnable {
     }
 
     private void fetch() {
-        for (String address : feeds.keySet()) {
+        HashMap<String, Pair<SyndFeed, ArrayList<Member>>> temp = new HashMap<>(feeds);
+        for (String address : temp.keySet()) {
             try {
                 URL url = new URL(address);
                 SyndFeed feed = input.build(new XmlReader(url));
@@ -164,7 +165,7 @@ public class RssWrk implements Runnable {
                 for (Object entry : feed.getEntries()) {
                     SyndEntryImpl se = (SyndEntryImpl) entry;
                     if (se.getPublishedDate().after(lastFetch)) {
-                        writeMessageForEntry(se, feeds.get(address).getValue());
+                        writeMessageForEntry(se, temp.get(address).getValue());
                     }
                 }
             } catch (IOException | FeedException ex) {
@@ -188,14 +189,59 @@ public class RssWrk implements Runnable {
         chan.sendMessage(msgBuilder.build()).queue();
     }
 
-    public void search(Member member, MessageChannel channel) {
+    public boolean search(Member member, TextChannel channel) {
         ArrayList<SyndFeed> list = new ArrayList<>();
         feeds.forEach((key, value) -> {
             if (!value.getValue().contains(member)) {
                 list.add(value.getKey());
             }
         });
-        RssSearchResult rsr = new RssSearchResult(chan, member, list);
+        if (list.isEmpty()) {
+            return false;
+        }
+        RssSearchResult rsr = new RssSearchResult(channel, member, list) {
+            @Override
+            public void isSelected(SyndFeed selected) {
+                addFeed(selected.getUri(), member);
+            }
+        };
         rsr.start();
+        return true;
+    }
+
+    public boolean searchRemove(Member member, TextChannel channel) {
+        ArrayList<SyndFeed> list = new ArrayList<>();
+        feeds.forEach((key, value) -> {
+            if (value.getValue().contains(member)) {
+                list.add(value.getKey());
+            }
+        });
+        if (list.isEmpty()) {
+            return false;
+        }
+        RssSearchResult rsr = new RssSearchResult(channel, member, list) {
+            @Override
+            public void isSelected(SyndFeed selected) {
+                removeFeed(selected.getUri(), member);
+            }
+        };
+        rsr.start();
+        return true;
+    }
+
+    public boolean searchDelete(Member member, TextChannel channel) {
+        ArrayList<SyndFeed> list = new ArrayList<>();
+        feeds.forEach((key, value) -> list.add(value.getKey()));
+        if (list.isEmpty()) {
+            return false;
+        }
+        RssSearchResult rsr = new RssSearchResult(channel, member, list) {
+            @Override
+            public void isSelected(SyndFeed selected) {
+                deleteFeed(selected.getUri());
+            }
+        };
+        rsr.start();
+        return true;
     }
 }

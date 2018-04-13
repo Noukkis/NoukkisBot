@@ -25,7 +25,10 @@ package noukkisBot.wrks;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
+import javafx.util.Pair;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageBulkDeleteEvent;
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
@@ -37,11 +40,11 @@ import net.dv8tion.jda.core.hooks.EventListener;
  * @author Noukkis
  */
 public final class ReactButtonsMaker implements EventListener {
-    
+
     private static final ReactButtonsMaker INSTANCE = new ReactButtonsMaker();
-    
-    private final HashMap<String, HashMap<String, Consumer<GenericMessageReactionEvent>>> map;
-    
+
+    private final HashMap<String, HashMap<String, Pair<User, Consumer<GenericMessageReactionEvent>>>> map;
+
     public static ReactButtonsMaker getInstance() {
         return INSTANCE;
     }
@@ -50,12 +53,16 @@ public final class ReactButtonsMaker implements EventListener {
         map = new HashMap<>();
     }
 
-    public void add(Message msg, String name, Consumer<GenericMessageReactionEvent> consumer) {
+    public void add(Message msg, String name, User blocker, Consumer<GenericMessageReactionEvent> consumer) {
         msg.addReaction(name).queue();
         if (!map.containsKey(msg.getId())) {
             map.put(msg.getId(), new HashMap<>());
         }
-        map.get(msg.getId()).put(name, consumer);
+        map.get(msg.getId()).put(name, new Pair<>(blocker, consumer));
+    }
+
+    public void add(Message msg, String name, Consumer<GenericMessageReactionEvent> consumer) {
+        add(msg, name, null, consumer);
     }
 
     @Override
@@ -70,7 +77,10 @@ public final class ReactButtonsMaker implements EventListener {
                 String id = e.getMessageId();
                 if (map.containsKey(id)) {
                     if (map.get(id).containsKey(e.getReactionEmote().getName())) {
-                        map.get(id).get(e.getReactionEmote().getName()).accept(e);
+                        User u = map.get(id).get(e.getReactionEmote().getName()).getKey();
+                        if (u == null || u.getIdLong() == ((GenericMessageReactionEvent) event).getUser().getIdLong()) {
+                            map.get(id).get(e.getReactionEmote().getName()).getValue().accept(e);
+                        }
                     }
                 }
             }
