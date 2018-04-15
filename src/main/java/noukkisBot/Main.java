@@ -32,6 +32,7 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.ReactButtonsMaker;
+import noukkisBot.wrks.autobackup.AutoBackup;
 
 public class Main {
 
@@ -56,8 +57,11 @@ public class Main {
                     .setGame(Game.playing("loading..."))
                     .addEventListener(ReactButtonsMaker.getInstance())
                     .addEventListener(ccb.build())
-                    .buildAsync();
-        } catch (IOException | LoginException ex) {
+                    .buildBlocking();
+            Help.BACKUP = new AutoBackup(jda, Help.BACKUP_FILE);
+            Help.LOGGER.info(Help.BACKUP.recover() ? "Backup loaded" : "Can't load Backup");
+            Help.BACKUP.scheduleBackup(1000*60*60);
+        } catch (IOException | LoginException | InterruptedException ex) {
             Help.LOGGER.error("Cannot launch the bot", ex);
         }
     }

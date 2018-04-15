@@ -49,6 +49,8 @@ public class Kill extends Command {
     @Override
     protected void execute(CommandEvent event) {
         Help.LOGGER.info("Killed by command");
+        Help.BACKUP.stop();
+        Help.BACKUP.backupNow();
         MusicWrk.killAll();
         ContestWrk.killAll();
         RssWrk.killAll();

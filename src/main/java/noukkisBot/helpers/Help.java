@@ -32,6 +32,7 @@ import com.jagrosh.jdautilities.commandclient.examples.AboutCommand;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import java.awt.Color;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +61,7 @@ import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
+import noukkisBot.wrks.autobackup.AutoBackup;
 import noukkisBot.wrks.music.MusicWrk;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -71,11 +73,12 @@ import org.slf4j.LoggerFactory;
  */
 public class Help {
 
-    public final static Logger LOGGER = LoggerFactory.getLogger(Help.class);
     private final static String PROPS_FILE = "bot.conf";
     private final static String COMMANDS_PACKAGE = "noukkisBot.commands";
     private final static Properties PROPS = new Properties();
 
+    public final static Logger LOGGER = LoggerFactory.getLogger(Help.class);
+    public final static File BACKUP_FILE = new File(".\\data.bak");
     public final static int KILL_STATUS = 15;
     public final static String YES_REACT = "\uD83D\uDC4D";
     public final static String NO_REACT = "\uD83D\uDC4E";
@@ -85,6 +88,7 @@ public class Help {
 
     public static String BOT_TOKEN;
     public static String OWNER_ID;
+    public static AutoBackup BACKUP;
 
     public static void init() throws IOException {
         LOGGER.info("Starting Bot using Java " + System.getProperty("java.version"));

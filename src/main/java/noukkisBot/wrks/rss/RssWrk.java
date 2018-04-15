@@ -40,10 +40,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.util.Pair;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.TextChannel;
 import noukkisBot.helpers.SearchResult;
 import org.jdom.Element;
@@ -85,7 +85,6 @@ public class RssWrk implements Runnable {
         this.running = false;
         this.input = new SyndFeedInput();
         this.lastFetch = new Date();
-        System.out.println(lastFetch);
     }
 
     public boolean isRunning() {
@@ -200,7 +199,7 @@ public class RssWrk implements Runnable {
         if (list.isEmpty()) {
             return false;
         }
-        
+
         SearchResult<SyndFeed> sr = new SearchResult<>(chan, member, list, (selected) -> {
             addFeed(selected.getUri(), member);
         });
@@ -242,5 +241,34 @@ public class RssWrk implements Runnable {
         sr.setLineMaker((feed) -> feed.getTitle());
         sr.start();
         return true;
+    }
+
+    public static HashMap<Long, HashMap<String, ArrayList<Long>>> serialize() {
+        HashMap<Long, HashMap<String, ArrayList<Long>>> res = new HashMap<>();
+        for (Guild guild : INSTANCES.keySet()) {
+            HashMap<String, ArrayList<Long>> map = new HashMap<>();
+            res.put(guild.getIdLong(), map);
+            RssWrk rss = INSTANCES.get(guild);
+            for (String feedUrl : rss.getFeeds().keySet()) {
+                map.put(feedUrl, new ArrayList<>());
+                for (Member member : rss.getFeeds().get(feedUrl).getValue()) {
+                    map.get(feedUrl).add(member.getUser().getIdLong());
+                }
+            }
+        }
+        return res;
+    }
+    
+    public static void unserialize(JDA jda, HashMap<Long, HashMap<String, ArrayList<Long>>> map) {
+        for (Long guildID : map.keySet()) {
+            Guild guild = jda.getGuildById(guildID);
+            RssWrk rss = getInstance(guild);
+            for (String feedUrl : map.get(guildID).keySet()) {
+                for (Long memberID : map.get(guildID).get(feedUrl)) {
+                    Member member = guild.getMemberById(memberID);
+                    rss.addFeed(feedUrl, member);
+                }
+            }
+        }
     }
 }
