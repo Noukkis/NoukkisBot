@@ -45,6 +45,7 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.TextChannel;
+import noukkisBot.helpers.SearchResult;
 import org.jdom.Element;
 
 /**
@@ -199,13 +200,13 @@ public class RssWrk implements Runnable {
         if (list.isEmpty()) {
             return false;
         }
-        RssSearchResult rsr = new RssSearchResult(channel, member, list) {
-            @Override
-            public void isSelected(SyndFeed selected) {
-                addFeed(selected.getUri(), member);
-            }
-        };
-        rsr.start();
+        
+        SearchResult<SyndFeed> sr = new SearchResult<>(chan, member, list, (selected) -> {
+            addFeed(selected.getUri(), member);
+        });
+        sr.setTitle("**Available Feeds**");
+        sr.setLineMaker((feed) -> feed.getTitle());
+        sr.start();
         return true;
     }
 
@@ -219,13 +220,12 @@ public class RssWrk implements Runnable {
         if (list.isEmpty()) {
             return false;
         }
-        RssSearchResult rsr = new RssSearchResult(channel, member, list) {
-            @Override
-            public void isSelected(SyndFeed selected) {
-                removeFeed(selected.getUri(), member);
-            }
-        };
-        rsr.start();
+        SearchResult<SyndFeed> sr = new SearchResult<>(chan, member, list, (selected) -> {
+            removeFeed(selected.getUri(), member);
+        });
+        sr.setTitle("**Removable Feeds**");
+        sr.setLineMaker((feed) -> feed.getTitle());
+        sr.start();
         return true;
     }
 
@@ -235,13 +235,12 @@ public class RssWrk implements Runnable {
         if (list.isEmpty()) {
             return false;
         }
-        RssSearchResult rsr = new RssSearchResult(channel, member, list) {
-            @Override
-            public void isSelected(SyndFeed selected) {
-                deleteFeed(selected.getUri());
-            }
-        };
-        rsr.start();
+        SearchResult<SyndFeed> sr = new SearchResult<>(chan, member, list, (selected) -> {
+            deleteFeed(selected.getUri());
+        });
+        sr.setTitle("**Deletable Feeds**");
+        sr.setLineMaker((feed) -> feed.getTitle());
+        sr.start();
         return true;
     }
 }

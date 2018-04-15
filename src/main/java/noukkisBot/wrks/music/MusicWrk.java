@@ -36,11 +36,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.PrivateChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import noukkisBot.helpers.Help;
+import noukkisBot.helpers.SearchResult;
 import noukkisBot.wrks.music.visualPlayer.TopicVisualPlayer;
 
 /**
@@ -49,6 +54,7 @@ import noukkisBot.wrks.music.visualPlayer.TopicVisualPlayer;
  */
 public class MusicWrk {
 
+    private static final Function<AudioTrack, String> lineMaker = (AudioTrack track) -> track.getInfo().title;
     private static final Map<Guild, MusicWrk> INSTANCES = new HashMap<>();
     private static final Map<PrivateChannel, MusicWrk> INSTANCES_PRIVATE = new HashMap<>();
     public static final AudioPlayerManager APM = new DefaultAudioPlayerManager();
@@ -56,6 +62,7 @@ public class MusicWrk {
     private final Guild guild;
     private final AudioPlayer ap;
     private final TrackManager tm;
+    private final Consumer<AudioTrack> selector;
 
     public static MusicWrk getInstance(Guild guild) {
         if (!INSTANCES.containsKey(guild)) {
@@ -80,6 +87,7 @@ public class MusicWrk {
         this.guild = guild;
         this.ap = APM.createPlayer();
         this.tm = new TrackManager(ap);
+        this.selector = (AudioTrack track) -> tm.queue(track);
         ap.addListener(tm);
         guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(ap));
     }
@@ -171,18 +179,26 @@ public class MusicWrk {
     }
 
     public void searchMusic(CommandEvent event, String prefix, String keywords) {
+        TextChannel chan = event.getTextChannel();
+        Member m = event.getMember();
         if (isConnected()) {
             APM.loadItem(prefix + keywords, new AudioLoadResultHandler() {
                 @Override
                 public void trackLoaded(AudioTrack track) {
                     List<AudioTrack> l = new ArrayList<>();
                     l.add(track);
-                    new AudioSearchResult(event, l, keywords).start();
+                    SearchResult<AudioTrack> sr = new SearchResult<>(chan, m, l, selector);
+                    sr.setTitle("**Search Results**\nfor keywords \"" + keywords + "\"");
+                    sr.setLineMaker(lineMaker);
+                    sr.start();
                 }
 
                 @Override
                 public void playlistLoaded(AudioPlaylist playlist) {
-                    new AudioSearchResult(event, playlist.getTracks(), keywords).start();
+                    SearchResult<AudioTrack> sr = new SearchResult<>(chan, m, playlist.getTracks(), selector);
+                    sr.setTitle("**Search Results**\nfor keywords \"" + keywords + "\"");
+                    sr.setLineMaker(lineMaker);
+                    sr.start();
                 }
 
                 @Override

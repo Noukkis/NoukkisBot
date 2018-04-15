@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Noukkis.
+ * Copyright 2018 Noukkis.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,55 +21,62 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.wrks.rss;
+package noukkisBot.helpers;
 
-import com.sun.syndication.feed.synd.SyndFeed;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
-import noukkisBot.helpers.Help;
 import noukkisBot.wrks.ReactButtonsMaker;
 
 /**
  *
  * @author Noukkis
  */
-public abstract class RssSearchResult {
+public class SearchResult<E> {
 
     private static final int MAX = 5;
 
-    private final List<SyndFeed> feeds;
-    private final List<SyndFeed> currents;
+    private final List<E> list;
+    private final List<E> currents;
     private final TextChannel chan;
     private final User author;
     private final int maxPage;
+    private final Consumer<E> selector;
+    
     private int page;
+    private String title;
+    private Function<E, String> lineMaker;
 
-    public RssSearchResult(TextChannel chan, Member member, List<SyndFeed> feeds) {
-        this.feeds = feeds;
+    public SearchResult(TextChannel chan, Member member, List<E> list, Consumer<E> selector) {
+        this.list = list;
         this.currents = new ArrayList<>();
         this.chan = chan;
         this.author = member.getUser();
-        this.maxPage = (feeds.size() / MAX) + 1;
+        this.maxPage = (list.size() / MAX) + 1;
         this.page = 0;
+        this.selector = selector;
+        title = "Result";
+        lineMaker = (E e) -> e.toString();
     }
 
-    void start() {
+    public void start() {
         ReactButtonsMaker rbm = ReactButtonsMaker.getInstance();
         chan.sendMessage(createMsg()).queue((msg) -> {
             rbm.add(msg, "❌", author, (event) -> stop(msg));
-            if (feeds.size() > 5) {
+            if (list.size() > 5) {
                 rbm.add(msg, "◀", author, (event) -> previous(msg));
             }
-            int max = feeds.size() > MAX ? MAX : feeds.size();
+            int max = list.size() > MAX ? MAX : list.size();
             for (int i = 0; i < max; i++) {
                 final int j = i;
                 rbm.add(msg, Help.NUMBERS_REACTS[i + 1], author, (event) -> select(j, msg));
             }
-            if (feeds.size() > 5) {
+            if (list.size() > 5) {
                 rbm.add(msg, "▶", author, (event) -> next(msg));
             }
         });
@@ -78,11 +85,11 @@ public abstract class RssSearchResult {
     private String createMsg() {
         currents.clear();
         int min = page * MAX;
-        String msg = "**Available Feeds**\n```markdown\n";
+        String msg = title + "\n```markdown\n";
 
-        for (int i = min; i < min + MAX && i < feeds.size(); i++) {
-            currents.add(feeds.get(i));
-            String title = feeds.get(i).getTitle();
+        for (int i = min; i < min + MAX && i < list.size(); i++) {
+            currents.add(list.get(i));
+            String title = lineMaker.apply(list.get(i));
             msg += "\n" + (i - min + 1) + ". " + title;
         }
         return msg + "```\nPage " + (page + 1) + "/" + maxPage;
@@ -106,8 +113,8 @@ public abstract class RssSearchResult {
 
     private void select(int i, Message msg) {
         int index = page * MAX + i;
-        if (index < feeds.size()) {
-            isSelected(feeds.get(index));
+        if (index < list.size()) {
+            selector.accept(list.get(index));
             stop(msg);
         }
     }
@@ -116,6 +123,15 @@ public abstract class RssSearchResult {
         msg.delete().queue();
     }
 
-    public abstract void isSelected(SyndFeed selected);
+    public String getTitle() {
+        return title;
+    }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setLineMaker(Function<E, String> lineMaker) {
+        this.lineMaker = lineMaker;
+    }
 }
