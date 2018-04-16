@@ -27,9 +27,9 @@ import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import com.sun.syndication.feed.synd.SyndFeed;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
-import javafx.util.Pair;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import noukkisBot.wrks.rss.RssWrk;
@@ -48,7 +48,7 @@ public class List extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-        HashMap<String, Pair<SyndFeed, ArrayList<Member>>>  feeds = RssWrk.getInstance(event.getGuild()).getFeeds();
+        HashMap<String, SimpleEntry<SyndFeed, ArrayList<Member>>>  feeds = RssWrk.getInstance(event.getGuild()).getFeeds();
         int i = 1;
         MessageBuilder builder = new MessageBuilder("RSS Feeds List :\n");
         String content = "";

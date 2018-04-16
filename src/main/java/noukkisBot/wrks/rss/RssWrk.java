@@ -31,6 +31,7 @@ import com.sun.syndication.io.XmlReader;
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -62,7 +63,7 @@ public class RssWrk implements Runnable {
     private TextChannel chan;
     private SyndFeedInput input;
     private Date lastFetch;
-    private HashMap<String, Pair<SyndFeed, ArrayList<Member>>> feeds;
+    private HashMap<String, SimpleEntry<SyndFeed, ArrayList<Member>>> feeds;
 
     public static RssWrk getInstance(Guild guild) {
         if (!INSTANCES.containsKey(guild)) {
@@ -96,7 +97,7 @@ public class RssWrk implements Runnable {
         INSTANCES.remove(chan.getGuild());
     }
 
-    public HashMap<String, Pair<SyndFeed, ArrayList<Member>>> getFeeds() {
+    public HashMap<String, SimpleEntry<SyndFeed, ArrayList<Member>>> getFeeds() {
         return feeds;
     }
 
@@ -132,7 +133,7 @@ public class RssWrk implements Runnable {
             } else {
                 ArrayList<Member> list = new ArrayList<>();
                 list.add(member);
-                feeds.put(address, new Pair<>(feed, list));
+                feeds.put(address, new SimpleEntry<>(feed, list));
             }
             return true;
         } catch (IOException | FeedException ex) {
@@ -156,7 +157,7 @@ public class RssWrk implements Runnable {
     }
 
     private void fetch() {
-        HashMap<String, Pair<SyndFeed, ArrayList<Member>>> temp = new HashMap<>(feeds);
+        HashMap<String, SimpleEntry<SyndFeed, ArrayList<Member>>> temp = new HashMap<>(feeds);
         for (String address : temp.keySet()) {
             try {
                 URL url = new URL(address);
