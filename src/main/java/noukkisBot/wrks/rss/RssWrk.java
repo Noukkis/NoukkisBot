@@ -201,7 +201,7 @@ public class RssWrk implements Runnable {
             return false;
         }
 
-        SearchResult<SyndFeed> sr = new SearchResult<>(chan, member, list, (selected) -> {
+        SearchResult<SyndFeed> sr = new SearchResult<>(channel, member, list, (selected) -> {
             addFeed(selected.getUri(), member);
         });
         sr.setTitle("**Available Feeds**");
@@ -220,7 +220,7 @@ public class RssWrk implements Runnable {
         if (list.isEmpty()) {
             return false;
         }
-        SearchResult<SyndFeed> sr = new SearchResult<>(chan, member, list, (selected) -> {
+        SearchResult<SyndFeed> sr = new SearchResult<>(channel, member, list, (selected) -> {
             removeFeed(selected.getUri(), member);
         });
         sr.setTitle("**Removable Feeds**");
@@ -235,7 +235,7 @@ public class RssWrk implements Runnable {
         if (list.isEmpty()) {
             return false;
         }
-        SearchResult<SyndFeed> sr = new SearchResult<>(chan, member, list, (selected) -> {
+        SearchResult<SyndFeed> sr = new SearchResult<>(channel, member, list, (selected) -> {
             deleteFeed(selected.getUri());
         });
         sr.setTitle("**Deletable Feeds**");

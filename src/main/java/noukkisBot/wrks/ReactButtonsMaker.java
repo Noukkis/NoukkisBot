@@ -23,10 +23,10 @@
  */
 package noukkisBot.wrks;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.function.Consumer;
 import javafx.util.Pair;
-import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.Event;
@@ -43,7 +43,7 @@ public final class ReactButtonsMaker implements EventListener {
 
     private static final ReactButtonsMaker INSTANCE = new ReactButtonsMaker();
 
-    private final HashMap<String, HashMap<String, Pair<User, Consumer<GenericMessageReactionEvent>>>> map;
+    private final HashMap<String, HashMap<String, SimpleEntry<User, Consumer<GenericMessageReactionEvent>>>> map;
 
     public static ReactButtonsMaker getInstance() {
         return INSTANCE;
@@ -58,7 +58,7 @@ public final class ReactButtonsMaker implements EventListener {
         if (!map.containsKey(msg.getId())) {
             map.put(msg.getId(), new HashMap<>());
         }
-        map.get(msg.getId()).put(name, new Pair<>(blocker, consumer));
+        map.get(msg.getId()).put(name, new SimpleEntry<>(blocker, consumer));
     }
 
     public void add(Message msg, String name, Consumer<GenericMessageReactionEvent> consumer) {
