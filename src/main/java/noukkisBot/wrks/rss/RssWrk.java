@@ -37,9 +37,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.util.Pair;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
@@ -56,14 +56,15 @@ import org.jdom.Element;
 public class RssWrk implements Runnable {
 
     private static final int SLEEP = 1000;
-    private static final Map<Guild, RssWrk> INSTANCES = new HashMap<>();
-    private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+    private static final Map<Guild, RssWrk> INSTANCES = new ConcurrentHashMap<>();
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+    
+    private final SyndFeedInput input;
+    private final Map<String, SimpleEntry<SyndFeed, List<Member>>> feeds;
 
     private boolean running;
     private TextChannel chan;
-    private SyndFeedInput input;
     private Date lastFetch;
-    private HashMap<String, SimpleEntry<SyndFeed, ArrayList<Member>>> feeds;
 
     public static RssWrk getInstance(Guild guild) {
         if (!INSTANCES.containsKey(guild)) {
@@ -82,7 +83,7 @@ public class RssWrk implements Runnable {
 
     private RssWrk(Guild guild) {
         this.chan = guild.getDefaultChannel();
-        this.feeds = new HashMap<>();
+        this.feeds = new ConcurrentHashMap<>();
         this.running = false;
         this.input = new SyndFeedInput();
         this.lastFetch = new Date();
@@ -97,7 +98,7 @@ public class RssWrk implements Runnable {
         INSTANCES.remove(chan.getGuild());
     }
 
-    public HashMap<String, SimpleEntry<SyndFeed, ArrayList<Member>>> getFeeds() {
+    public Map<String, SimpleEntry<SyndFeed, List<Member>>> getFeeds() {
         return feeds;
     }
 
@@ -157,25 +158,24 @@ public class RssWrk implements Runnable {
     }
 
     private void fetch() {
-        HashMap<String, SimpleEntry<SyndFeed, ArrayList<Member>>> temp = new HashMap<>(feeds);
-        for (String address : temp.keySet()) {
+        feeds.forEach((key, value) -> {
             try {
-                URL url = new URL(address);
+                URL url = new URL(key);
                 SyndFeed feed = input.build(new XmlReader(url));
-                feed.setUri(address);
-                for (Object entry : feed.getEntries()) {
-                    SyndEntryImpl se = (SyndEntryImpl) entry;
+                feed.setUri(key);
+                for (Object feedEntry : feed.getEntries()) {
+                    SyndEntryImpl se = (SyndEntryImpl) feedEntry;
                     if (se.getPublishedDate().after(lastFetch)) {
-                        writeMessageForEntry(se, temp.get(address).getValue());
+                        writeMessageForEntry(se, value.getValue());
                     }
                 }
             } catch (IOException | FeedException ex) {
                 Logger.getLogger(RssWrk.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
+        });
     }
 
-    private void writeMessageForEntry(SyndEntryImpl se, ArrayList<Member> subs) {
+    private void writeMessageForEntry(SyndEntryImpl se, List<Member> subs) {
         EmbedBuilder builder = new EmbedBuilder();
         builder.setTitle(se.getTitle(), se.getUri())
                 .setAuthor(se.getAuthor())
@@ -246,30 +246,29 @@ public class RssWrk implements Runnable {
 
     public static HashMap<Long, HashMap<String, ArrayList<Long>>> serialize() {
         HashMap<Long, HashMap<String, ArrayList<Long>>> res = new HashMap<>();
-        for (Guild guild : INSTANCES.keySet()) {
+        INSTANCES.forEach((guild, rss) -> {
             HashMap<String, ArrayList<Long>> map = new HashMap<>();
             res.put(guild.getIdLong(), map);
-            RssWrk rss = INSTANCES.get(guild);
-            for (String feedUrl : rss.getFeeds().keySet()) {
+            rss.getFeeds().forEach((feedUrl, value) -> {
                 map.put(feedUrl, new ArrayList<>());
-                for (Member member : rss.getFeeds().get(feedUrl).getValue()) {
+                value.getValue().forEach((member) -> {
                     map.get(feedUrl).add(member.getUser().getIdLong());
-                }
-            }
-        }
+                });
+            });
+        });
         return res;
     }
-    
+
     public static void unserialize(JDA jda, HashMap<Long, HashMap<String, ArrayList<Long>>> map) {
-        for (Long guildID : map.keySet()) {
+        map.forEach((guildID, value) -> {
             Guild guild = jda.getGuildById(guildID);
             RssWrk rss = getInstance(guild);
-            for (String feedUrl : map.get(guildID).keySet()) {
-                for (Long memberID : map.get(guildID).get(feedUrl)) {
+            value.forEach((feedUrl, members) -> {
+                for (Long memberID : members) {
                     Member member = guild.getMemberById(memberID);
                     rss.addFeed(feedUrl, member);
                 }
-            }
-        }
+            });
+        });
     }
 }
