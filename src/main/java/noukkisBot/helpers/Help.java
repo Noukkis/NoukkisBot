@@ -78,7 +78,7 @@ public class Help {
     private final static Properties PROPS = new Properties();
 
     public final static Logger LOGGER = LoggerFactory.getLogger(Help.class);
-    public final static File BACKUP_FILE = new File(".\\data.bak");
+    public final static File BACKUP_FILE = new File("data.bak");
     public final static int KILL_STATUS = 15;
     public final static String YES_REACT = "\uD83D\uDC4D";
     public final static String NO_REACT = "\uD83D\uDC4E";
