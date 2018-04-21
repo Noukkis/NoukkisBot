@@ -26,7 +26,6 @@ package noukkisBot.commands.rss;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import net.dv8tion.jda.core.Permission;
 import noukkisBot.wrks.rss.RssWrk;
 
 /**
@@ -39,7 +38,6 @@ public class Rss extends Command {
         this.name = "rss";
         this.category = new Category("RSS");
         this.help = "make this channel the RSS channel";
-        this.userPermissions = new Permission[]{Permission.MANAGE_CHANNEL};
     }
 
     @Override

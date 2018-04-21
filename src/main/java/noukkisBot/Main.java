@@ -30,6 +30,7 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
+import noukkisBot.autoresponses.AutoResponseManager;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.ReactButtonsMaker;
 import noukkisBot.wrks.autobackup.AutoBackup;
@@ -42,10 +43,14 @@ public class Main {
     public static void main(String[] args) throws Exception {
         launch();
     }
+    
+    private final static int BACKUP_TIME = 1000*60*60;
 
     public static void launch() {
         try {
             Help.init();
+            AutoResponseManager arm = new AutoResponseManager();
+            arm.init();
             CommandClientBuilder ccb = new CommandClientBuilder()
                     .setOwnerId(Help.OWNER_ID)
                     .setEmojis("\u2705", "\u26A0", "\u274C")
@@ -57,10 +62,12 @@ public class Main {
                     .setGame(Game.playing("loading..."))
                     .addEventListener(ReactButtonsMaker.getInstance())
                     .addEventListener(ccb.build())
+                    .addEventListener(arm)
                     .buildBlocking();
             Help.BACKUP = new AutoBackup(jda, Help.BACKUP_FILE);
             Help.LOGGER.info(Help.BACKUP.recover() ? "Backup loaded" : "Can't load Backup");
             Help.BACKUP.scheduleBackup(1000*60*60);
+            Help.LOGGER.info("Backups scheduled every " + BACKUP_TIME + " seconds");
         } catch (IOException | LoginException | InterruptedException ex) {
             Help.LOGGER.error("Cannot launch the bot", ex);
         }

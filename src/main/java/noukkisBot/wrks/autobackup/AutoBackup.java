@@ -97,6 +97,7 @@ public class AutoBackup extends TimerTask {
                 RssWrk.unserialize(jda, feeds);
                 return true;
             } catch (Exception ex) {
+                Help.LOGGER.error("Unloadable Backup file", ex);
             } finally {
                 if (in != null) {
                     try {

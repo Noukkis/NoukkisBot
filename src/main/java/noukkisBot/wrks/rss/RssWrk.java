@@ -46,6 +46,7 @@ import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
+import noukkisBot.helpers.Help;
 import noukkisBot.helpers.SearchResult;
 import org.jdom.Element;
 
@@ -169,8 +170,8 @@ public class RssWrk implements Runnable {
                         writeMessageForEntry(se, value.getValue());
                     }
                 }
-            } catch (IOException | FeedException ex) {
-                Logger.getLogger(RssWrk.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
+                Help.LOGGER.error("Error fetching " + key, ex);
             }
         });
     }
@@ -248,7 +249,7 @@ public class RssWrk implements Runnable {
         HashMap<Long, HashMap<String, ArrayList<Long>>> res = new HashMap<>();
         INSTANCES.forEach((guild, rss) -> {
             HashMap<String, ArrayList<Long>> map = new HashMap<>();
-            res.put(guild.getIdLong(), map);
+            res.put(rss.chan.getIdLong(), map);
             rss.getFeeds().forEach((feedUrl, value) -> {
                 map.put(feedUrl, new ArrayList<>());
                 value.getValue().forEach((member) -> {
@@ -260,9 +261,11 @@ public class RssWrk implements Runnable {
     }
 
     public static void unserialize(JDA jda, HashMap<Long, HashMap<String, ArrayList<Long>>> map) {
-        map.forEach((guildID, value) -> {
-            Guild guild = jda.getGuildById(guildID);
+        map.forEach((chanID, value) -> {
+            TextChannel chan = jda.getTextChannelById(chanID);
+            Guild guild = chan.getGuild();
             RssWrk rss = getInstance(guild);
+            rss.setChan(chan);
             value.forEach((feedUrl, members) -> {
                 for (Long memberID : members) {
                     Member member = guild.getMemberById(memberID);

@@ -40,7 +40,6 @@ public class Delete extends Command {
         this.category = new Category("RSS");
         this.help = "Unsubscribe everyone to a RSS feed and delete it";
         this.arguments = "<rss feed link>";
-        this.userPermissions = new Permission[]{Permission.MANAGE_CHANNEL};
     }
 
     @Override
