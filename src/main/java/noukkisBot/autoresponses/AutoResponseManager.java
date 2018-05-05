@@ -38,20 +38,15 @@ import net.dv8tion.jda.core.hooks.EventListener;
 public class AutoResponseManager implements EventListener {
     
     private final ArrayList<AutoResponse> responses;
-    private final ArrayList<String> salutations;
 
     public AutoResponseManager() {
         this.responses = new ArrayList<>();
-        this.salutations = new ArrayList<>();
     }
     
     public void init() {
         responses.add(new AutoResponse("tupu", "no u"));
+		responses.add(new AutoResponse("duku", "no u"));
         responses.add(new AutoResponse("(╯°□°）╯︵ ┻━┻", "┬─┬ ノ( ゜-゜ノ)"));
-        
-        salutations.add("Salut");
-        salutations.add("Yo");
-        salutations.add("Bienvenue");
     }
 
     @Override
@@ -60,16 +55,11 @@ public class AutoResponseManager implements EventListener {
             String msg = ((MessageReceivedEvent) event).getMessage().getContentRaw();
             MessageChannel chan = ((MessageReceivedEvent) event).getChannel();
             for (AutoResponse autoResponse : responses) {
-                if(msg.contains(autoResponse.trigger)) {
+                if(msg.toLowerCase().contains(autoResponse.trigger)) {
                     chan.sendMessage(autoResponse.response).queue();
                     break;
                 }
             }
-        } else if (event instanceof GuildMemberJoinEvent) {
-            MessageChannel chan = ((GuildMemberJoinEvent) event).getGuild().getDefaultChannel();
-            Member m = ((GuildMemberJoinEvent) event).getMember();
-            int i = (int) (Math.random() * salutations.size());
-            chan.sendMessage(salutations.get(i) + " " + m.getAsMention()).queue();
         }
     }
     

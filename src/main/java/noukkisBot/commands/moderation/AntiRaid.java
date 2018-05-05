@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Noukkis.
+ * Copyright 2018 Noukkis.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,46 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.commands.owner;
+package noukkisBot.commands.moderation;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import noukkisBot.Main;
-import noukkisBot.helpers.Help;
+import java.util.List;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Role;
 import noukkisBot.wrks.GuildontonManager;
-import noukkisBot.wrks.contest.ContestWrk;
-import noukkisBot.wrks.music.MusicWrk;
-import noukkisBot.wrks.rss.RssWrk;
+import noukkisBot.wrks.auto.AutoAntiRaid;
 
 /**
  *
  * @author Noukkis
  */
-public class Kill extends Command {
+public class AntiRaid extends Command {
 
-    public Kill() {
-        this.name = "kill";
-        this.category = new Category("Owner-only");
-        this.aliases = new String[]{"k", "restart", "r"};
-        this.help = "Kill or restart this bot";
-        this.guildOnly = false;
-        this.ownerCommand = true;
+    public AntiRaid() {
+        this.name = "antiraid";
+        this.help = "Provide AntiRaid helper";
+        this.arguments = "<Staff Role Mention>";
+        this.category = new Category("Moderation");
+        this.userPermissions = new Permission[]{Permission.ADMINISTRATOR};
     }
 
     @Override
     protected void execute(CommandEvent event) {
-        Help.LOGGER.info("Killed by command");
-        Help.BACKUP.stop();
-        Help.BACKUP.backupNow();
-        MusicWrk.killAll();
-        ContestWrk.killAll();
-        RssWrk.killAll();
-        GuildontonManager.getInstance().killAll();
-        boolean restart = event.getMessage().getContentRaw().contains("r");
-        event.replySuccess(restart ? "Bot will restart" : "Bot shut down");
-        event.getJDA().shutdown();
-        if (restart) {
-            Main.launch();
+        List<Role> roles = event.getMessage().getMentionedRoles();
+        if (roles.isEmpty()) {
+            event.replyError("You must mention the Staff Role");
+        } else {
+            AutoAntiRaid aar = GuildontonManager.getInstance().getGuildonton(event.getGuild(), AutoAntiRaid.class);
+            aar.setStaff(roles.get(0));
+            event.reactSuccess();
         }
     }
 

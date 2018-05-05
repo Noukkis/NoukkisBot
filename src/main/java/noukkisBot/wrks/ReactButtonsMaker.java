@@ -24,11 +24,15 @@
 package noukkisBot.wrks;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.function.Consumer;
-import javafx.util.Pair;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageBulkDeleteEvent;
 import net.dv8tion.jda.core.events.message.MessageDeleteEvent;
@@ -43,7 +47,7 @@ public final class ReactButtonsMaker implements EventListener {
 
     private static final ReactButtonsMaker INSTANCE = new ReactButtonsMaker();
 
-    private final HashMap<String, HashMap<String, SimpleEntry<User, Consumer<GenericMessageReactionEvent>>>> map;
+    private final HashMap<String, HashMap<String, SimpleEntry<Blocker, Consumer<GenericMessageReactionEvent>>>> map;
 
     public static ReactButtonsMaker getInstance() {
         return INSTANCE;
@@ -53,7 +57,7 @@ public final class ReactButtonsMaker implements EventListener {
         map = new HashMap<>();
     }
 
-    public void add(Message msg, String name, User blocker, Consumer<GenericMessageReactionEvent> consumer) {
+    public void add(Message msg, String name, Blocker blocker, Consumer<GenericMessageReactionEvent> consumer) {
         msg.addReaction(name).queue();
         if (!map.containsKey(msg.getId())) {
             map.put(msg.getId(), new HashMap<>());
@@ -77,8 +81,8 @@ public final class ReactButtonsMaker implements EventListener {
                 String id = e.getMessageId();
                 if (map.containsKey(id)) {
                     if (map.get(id).containsKey(e.getReactionEmote().getName())) {
-                        User u = map.get(id).get(e.getReactionEmote().getName()).getKey();
-                        if (u == null || u.getIdLong() == ((GenericMessageReactionEvent) event).getUser().getIdLong()) {
+                        Blocker blocker = map.get(id).get(e.getReactionEmote().getName()).getKey();
+                        if (blocker == null || blocker.authorised(e.getMember())) {
                             map.get(id).get(e.getReactionEmote().getName()).getValue().accept(e);
                         }
                     }
@@ -92,4 +96,52 @@ public final class ReactButtonsMaker implements EventListener {
         map.remove(msg.getId());
     }
 
+    public static class Blocker {
+
+        private final ArrayList<Member> members;
+        private final ArrayList<Role> roles;
+        private final ArrayList<Permission> perms;
+
+        public static Blocker from(Member... members) {
+            Blocker blocker = new Blocker();
+            blocker.members.addAll(Arrays.asList(members));
+            return blocker;
+        }
+
+        public static Blocker from(Role... roles) {
+            Blocker blocker = new Blocker();
+            blocker.roles.addAll(Arrays.asList(roles));
+            return blocker;
+        }
+
+        public static Blocker from(Permission... perms) {
+            Blocker blocker = new Blocker();
+            blocker.perms.addAll(Arrays.asList(perms));
+            return blocker;
+        }
+
+        public Blocker() {
+            members = new ArrayList<>();
+            roles = new ArrayList<>();
+            perms = new ArrayList<>();
+        }
+
+        public ArrayList<Member> getMembers() {
+            return members;
+        }
+
+        public ArrayList<Role> getRoles() {
+            return roles;
+        }
+
+        public ArrayList<Permission> getPerms() {
+            return perms;
+        }
+
+        public boolean authorised(Member m) {
+            return members.contains(m)
+                    || (!roles.isEmpty() && !Collections.disjoint(m.getRoles(), roles))
+                    || m.hasPermission(perms);
+        }
+    }
 }

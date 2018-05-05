@@ -38,14 +38,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
+import noukkisBot.helpers.ExtendedThread;
 import noukkisBot.helpers.Help;
 import noukkisBot.helpers.SearchResult;
 import org.jdom.Element;
@@ -54,24 +53,24 @@ import org.jdom.Element;
  *
  * @author Noukkis
  */
-public class RssWrk implements Runnable {
+public class RssWrk extends ExtendedThread {
 
-    private static final int SLEEP = 1000;
+    private static final int SLEEP = 1000 * 60;
     private static final Map<Guild, RssWrk> INSTANCES = new ConcurrentHashMap<>();
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
-    
+
     private final SyndFeedInput input;
     private final Map<String, SimpleEntry<SyndFeed, List<Member>>> feeds;
 
-    private boolean running;
     private TextChannel chan;
     private Date lastFetch;
 
     public static RssWrk getInstance(Guild guild) {
         if (!INSTANCES.containsKey(guild)) {
             RssWrk rss = new RssWrk(guild);
+            rss.setName("RSS-" + guild.getName());
             INSTANCES.put(guild, rss);
-            new Thread(rss, "RSS-" + guild.getName()).start();
+            rss.start();
         }
         return INSTANCES.get(guild);
     }
@@ -83,19 +82,15 @@ public class RssWrk implements Runnable {
     }
 
     private RssWrk(Guild guild) {
+        super(SLEEP);
         this.chan = guild.getDefaultChannel();
         this.feeds = new ConcurrentHashMap<>();
-        this.running = false;
         this.input = new SyndFeedInput();
         this.lastFetch = new Date();
     }
 
-    public boolean isRunning() {
-        return running;
-    }
-
     public void kill() {
-        running = false;
+        close();
         INSTANCES.remove(chan.getGuild());
     }
 
@@ -104,17 +99,10 @@ public class RssWrk implements Runnable {
     }
 
     @Override
-    public void run() {
-        running = true;
-        while (running) {
-            Date now = new Date();
-            fetch();
-            lastFetch = now;
-            try {
-                Thread.sleep(SLEEP);
-            } catch (InterruptedException ex) {
-            }
-        }
+    public void execute() {
+        Date now = new Date();
+        fetch();
+        lastFetch = now;
     }
 
     public void setChan(TextChannel chan) {
@@ -166,7 +154,7 @@ public class RssWrk implements Runnable {
                 feed.setUri(key);
                 for (Object feedEntry : feed.getEntries()) {
                     SyndEntryImpl se = (SyndEntryImpl) feedEntry;
-                    if (se.getPublishedDate().after(lastFetch)) {
+                    if (se.getPublishedDate().after(lastFetch) && !se.getPublishedDate().after(new Date())) {
                         writeMessageForEntry(se, value.getValue());
                     }
                 }

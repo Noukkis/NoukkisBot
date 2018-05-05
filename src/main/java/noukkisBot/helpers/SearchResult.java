@@ -32,6 +32,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 import noukkisBot.wrks.ReactButtonsMaker;
+import noukkisBot.wrks.ReactButtonsMaker.Blocker;
 
 /**
  *
@@ -44,7 +45,7 @@ public class SearchResult<E> {
     private final List<E> list;
     private final List<E> currents;
     private final TextChannel chan;
-    private final User author;
+    private final Member author;
     private final int maxPage;
     private final Consumer<E> selector;
     
@@ -56,7 +57,7 @@ public class SearchResult<E> {
         this.list = list;
         this.currents = new ArrayList<>();
         this.chan = chan;
-        this.author = member.getUser();
+        this.author = member;
         this.maxPage = (list.size() / MAX) + 1;
         this.page = 0;
         this.selector = selector;
@@ -67,17 +68,18 @@ public class SearchResult<E> {
     public void start() {
         ReactButtonsMaker rbm = ReactButtonsMaker.getInstance();
         chan.sendMessage(createMsg()).queue((msg) -> {
-            rbm.add(msg, "❌", author, (event) -> stop(msg));
+            Blocker blocker = Blocker.from(author);
+            rbm.add(msg, "❌", blocker, (event) -> stop(msg));
             if (list.size() > 5) {
-                rbm.add(msg, "◀", author, (event) -> previous(msg));
+                rbm.add(msg, "◀", blocker, (event) -> previous(msg));
             }
             int max = list.size() > MAX ? MAX : list.size();
             for (int i = 0; i < max; i++) {
                 final int j = i;
-                rbm.add(msg, Help.NUMBERS_REACTS[i + 1], author, (event) -> select(j, msg));
+                rbm.add(msg, Help.NUMBERS_REACTS[i + 1], blocker, (event) -> select(j, msg));
             }
             if (list.size() > 5) {
-                rbm.add(msg, "▶", author, (event) -> next(msg));
+                rbm.add(msg, "▶", blocker, (event) -> next(msg));
             }
         });
     }

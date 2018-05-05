@@ -61,7 +61,7 @@ import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
-import noukkisBot.wrks.autobackup.AutoBackup;
+import noukkisBot.wrks.auto.AutoBackup;
 import noukkisBot.wrks.music.MusicWrk;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -118,11 +118,11 @@ public class Help {
                 ccb.addCommand(command);
                 perms.addAll(Arrays.asList(command.getBotPermissions()));
             } catch (InstantiationException | IllegalAccessException ex) {
-                System.err.println("Can't instance " + c.getName());
-                ex.printStackTrace();
+                LOGGER.error("Can't instance " + c.getName(), ex);
             }
         }
-        String[] features = {"Cleans Chat", "Makes Polls", "Plays Music", "Manage Contests", "Some others things"};
+        String[] features = {"Cleans Chat", "Makes Polls", "Plays Music", "Manages Contests",
+                            "Fetches RSS feeds", "Some others things"};
         String description = "a cool [Open Source](https://github.com/Noukkis/NoukkisBot) bot";
         ccb.addCommand(new AboutCommand(Color.YELLOW, description, features, perms.toArray(new Permission[0])));
     }
