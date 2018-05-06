@@ -32,6 +32,7 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import noukkisBot.helpers.Help;
@@ -46,33 +47,35 @@ import noukkisBot.wrks.ReactButtonsMaker.Blocker;
 public class AutoAntiRaid implements GuildontonManager.Guildonton {
 
     private final static long WAITING_TIME = 1000 * 60 * 1;
-    private final static long ALERT_TIME = 1000 * 60 * 10;
-    private final static long TOO_MUCH_MEMBERS = 3;
+    private final static long ALERT_TIME = 1000 * 60 * 1;
+    private final static long TOO_MUCH_MEMBERS = 1;
 
-    private Guild guild;
-    private Role staff;
-    private Set<Member> newMembers;
-    private boolean onAlert;
-    private Timer timer;
+    private Long staffRole;
+    private Set<Long> newMembers;
+
+    private transient boolean onAlert;
+    private transient Timer timer;
+    private transient Guild guild;
 
     public AutoAntiRaid() {
         newMembers = Sets.newConcurrentHashSet();
         onAlert = false;
-        staff = null;
-        timer = new Timer();
+        staffRole = null;
+        timer = null;
     }
 
     @Override
     public void init(Guild guild) {
         this.guild = guild;
+        timer = new Timer();
     }
 
     public Role getStaff() {
-        return staff;
+        return guild.getRoleById(staffRole);
     }
 
     public void setStaff(Role staff) {
-        this.staff = staff;
+        this.staffRole = staff.getIdLong();
     }
 
     @Override
@@ -84,12 +87,12 @@ public class AutoAntiRaid implements GuildontonManager.Guildonton {
                 if (onAlert) {
                     ban(m);
                 } else {
-                    newMembers.add(m);
+                    newMembers.add(m.getUser().getIdLong());
                     timer.schedule(new TimerTask() {
                         @Override
                         public void run() {
                             if (!onAlert) {
-                                newMembers.remove(m);
+                                newMembers.remove(m.getUser().getIdLong());
                             }
                         }
                     }, WAITING_TIME);
@@ -104,8 +107,8 @@ public class AutoAntiRaid implements GuildontonManager.Guildonton {
     private void alert() {
         boolean perm = guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS);
         if (perm) {
-            guild.getDefaultChannel().sendMessage("Beware " + staff.getAsMention() + ", I suspect a RAID !!!\nDo I take care of it ?").queue((msg) -> {
-                Blocker blocker = Blocker.from(staff);
+            guild.getDefaultChannel().sendMessage("Beware " + getStaff().getAsMention() + ", I suspect a RAID !!!\nDo I take care of it ?").queue((msg) -> {
+                Blocker blocker = Blocker.from(getStaff());
                 ReactButtonsMaker.getInstance().add(msg, Help.YES_REACT, blocker, (event) -> {
                     alertTime(msg);
                 });
@@ -114,24 +117,30 @@ public class AutoAntiRaid implements GuildontonManager.Guildonton {
                 });
             });
         } else {
-            guild.getDefaultChannel().sendMessage("Beware " + staff.getAsMention() + ", I suspect a RAID !!!").queue();
+            guild.getDefaultChannel().sendMessage("Beware " + getStaff().getAsMention() + ", I suspect a RAID !!!").queue();
         }
     }
 
     private void ban(Member member) {
-        guild.getController().ban(member, 1, "Antiraid mode").queue();
+        boolean perm = guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS);
+        if (perm) {
+            guild.getController().ban(member, 1, "Antiraid mode").queue();
+        }
     }
 
     private void alertTime(Message msg) {
+        TextChannel chan = msg.getTextChannel();
         msg.delete().queue();
         onAlert = true;
+        chan.sendMessage(getStaff().getAsMention() + " Alert Mode Enabled").queue();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 onAlert = false;
+                chan.sendMessage(getStaff().getAsMention() + " Alert Mode Disabled").queue();
             }
         }, ALERT_TIME);
-        newMembers.forEach((member) -> ban(member));
+        newMembers.forEach((member) -> ban(guild.getMemberById(member)));
     }
 
     public boolean isOnAlert() {

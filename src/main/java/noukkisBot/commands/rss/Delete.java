@@ -26,7 +26,7 @@ package noukkisBot.commands.rss;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import net.dv8tion.jda.core.Permission;
+import noukkisBot.wrks.GuildontonManager;
 import noukkisBot.wrks.rss.RssWrk;
 
 /**
@@ -44,14 +44,14 @@ public class Delete extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-
         boolean ok = false;
+        RssWrk rss = GuildontonManager.getInstance().getGuildonton(event.getGuild(), RssWrk.class);
         if (event.getArgs().isEmpty()) {
-            if (!RssWrk.getInstance(event.getGuild()).searchDelete(event.getMember(), event.getTextChannel())) {
+            if (!rss.searchDelete(event.getMember(), event.getTextChannel())) {
                 event.reactError();
             }
         } else {
-            if (RssWrk.getInstance(event.getGuild()).deleteFeed(event.getArgs())) {
+            if (rss.deleteFeed(event.getArgs())) {
                 event.reactSuccess();
             } else {
                 event.reactError();

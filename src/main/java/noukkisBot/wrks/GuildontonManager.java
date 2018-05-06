@@ -25,7 +25,10 @@ package noukkisBot.wrks;
 
 import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.MutableClassToInstanceMap;
+import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.hooks.EventListener;
@@ -37,15 +40,32 @@ import noukkisBot.helpers.Help;
  */
 public class GuildontonManager implements EventListener {
 
-    private HashMap<Guild, ClassToInstanceMap<Guildonton>> map;
+    public static boolean unserialize(JDA jda, Serializable serial) {
+        if (serial instanceof HashMap) {
+            HashMap<Long, ClassToInstanceMap<Guildonton>> serialMap = (HashMap<Long, ClassToInstanceMap<Guildonton>>) serial;
+            serialMap.forEach((guildId, ctim) -> {
+                Guild guild = jda.getGuildById(guildId);
+                if (guild != null) {
+                    INSTANCE.map.put(guildId, ctim);
+                    ctim.forEach((c, guildonton) -> {
+                        guildonton.init(guild);
+                    });
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
+    private HashMap<Long, ClassToInstanceMap<Guildonton>> map;
 
     private GuildontonManager() {
         map = new HashMap<>();
     }
 
     public <G extends Guildonton> G getGuildonton(Guild guild, Class<G> c) {
-        map.putIfAbsent(guild, MutableClassToInstanceMap.create());
-        ClassToInstanceMap<Guildonton> ctim = map.get(guild);
+        map.putIfAbsent(guild.getIdLong(), MutableClassToInstanceMap.create());
+        ClassToInstanceMap<Guildonton> ctim = map.get(guild.getIdLong());
         if (!ctim.containsKey(c)) {
             try {
                 G instance = c.newInstance();
@@ -69,33 +89,39 @@ public class GuildontonManager implements EventListener {
     }
 
     public void killAll() {
-        map.forEach((guild, ctim) -> {
-            ctim.forEach((c, instance) -> {
-                kill(guild, c);
+        map.forEach((guildId, ctim) -> {
+            new HashSet<>(ctim.keySet()).forEach((c) -> {
+                kill(guildId, c);
             });
         });
     }
 
-    public void kill(Guild guild, Class<? extends Guildonton> c) {
-        if(map.containsKey(guild)) {
-            ClassToInstanceMap<Guildonton> ctim = map.get(guild);
-            if(ctim.containsKey(c)) {
+    public void kill(Long guildId, Class<? extends Guildonton> c) {
+        if (map.containsKey(guildId)) {
+            ClassToInstanceMap<Guildonton> ctim = map.get(guildId);
+            if (ctim.containsKey(c)) {
                 ctim.get(c).kill();
             }
             ctim.remove(c);
         }
     }
 
-    public interface Guildonton {
+    public HashMap<Long, ClassToInstanceMap<Guildonton>> getMap() {
+        return map;
+    }
+
+    public interface Guildonton extends Serializable {
 
         void init(Guild guild);
 
-        void onEvent(Event event);
+        default void onEvent(Event event) {
+        }
 
         void kill();
+
     }
 
-    private final static GuildontonManager INSTANCE = new GuildontonManager();
+    private static final GuildontonManager INSTANCE = new GuildontonManager();
 
     public static GuildontonManager getInstance() {
         return INSTANCE;

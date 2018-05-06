@@ -141,7 +141,7 @@ public final class ReactButtonsMaker implements EventListener {
         public boolean authorised(Member m) {
             return members.contains(m)
                     || (!roles.isEmpty() && !Collections.disjoint(m.getRoles(), roles))
-                    || m.hasPermission(perms);
+                    || (!perms.isEmpty() && m.hasPermission(perms));
         }
     }
 }

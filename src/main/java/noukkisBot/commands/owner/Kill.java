@@ -54,7 +54,6 @@ public class Kill extends Command {
         Help.BACKUP.backupNow();
         MusicWrk.killAll();
         ContestWrk.killAll();
-        RssWrk.killAll();
         GuildontonManager.getInstance().killAll();
         boolean restart = event.getMessage().getContentRaw().contains("r");
         event.replySuccess(restart ? "Bot will restart" : "Bot shut down");

@@ -26,6 +26,7 @@ package noukkisBot.commands.rss;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
+import noukkisBot.wrks.GuildontonManager;
 import noukkisBot.wrks.rss.RssWrk;
 
 /**
@@ -44,12 +45,13 @@ public class Add extends Command {
     @Override
     protected void execute(CommandEvent event) {
         boolean ok = false;
+        RssWrk rss = GuildontonManager.getInstance().getGuildonton(event.getGuild(), RssWrk.class);
         if (event.getArgs().isEmpty()) {
-            if(!RssWrk.getInstance(event.getGuild()).search(event.getMember(), event.getTextChannel())){
+            if(!rss.search(event.getMember(), event.getTextChannel())){
                 event.reactError();
             }
         } else {
-            if (RssWrk.getInstance(event.getGuild()).addFeed(event.getArgs(), event.getMember())) {
+            if (rss.addFeed(event.getArgs(), event.getMember())) {
                 event.reactSuccess();
             } else {
                 event.reactError();

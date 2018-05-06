@@ -38,8 +38,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
@@ -47,54 +48,50 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import noukkisBot.helpers.ExtendedThread;
 import noukkisBot.helpers.Help;
 import noukkisBot.helpers.SearchResult;
+import noukkisBot.wrks.GuildontonManager.Guildonton;
 import org.jdom.Element;
 
 /**
  *
  * @author Noukkis
  */
-public class RssWrk extends ExtendedThread {
+public class RssWrk extends ExtendedThread implements Guildonton {
 
-    private static final int SLEEP = 1000 * 60;
-    private static final Map<Guild, RssWrk> INSTANCES = new ConcurrentHashMap<>();
+    private static final int SLEEP = 1000 * 3;
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
-    private final SyndFeedInput input;
-    private final Map<String, SimpleEntry<SyndFeed, List<Member>>> feeds;
+    private final Map<String, List<Long>> feeds;
 
-    private TextChannel chan;
-    private Date lastFetch;
+    private long chan;
 
-    public static RssWrk getInstance(Guild guild) {
-        if (!INSTANCES.containsKey(guild)) {
-            RssWrk rss = new RssWrk(guild);
-            rss.setName("RSS-" + guild.getName());
-            INSTANCES.put(guild, rss);
-            rss.start();
-        }
-        return INSTANCES.get(guild);
-    }
+    private transient Date lastFetch;
+    private transient Guild guild;
+    private transient SyndFeedInput input;
 
-    public static void killAll() {
-        for (RssWrk wrk : INSTANCES.values()) {
-            wrk.kill();
-        }
-    }
-
-    private RssWrk(Guild guild) {
+    public RssWrk() {
         super(SLEEP);
-        this.chan = guild.getDefaultChannel();
         this.feeds = new ConcurrentHashMap<>();
-        this.input = new SyndFeedInput();
-        this.lastFetch = new Date();
+        this.chan = -1;
     }
 
+    @Override
+    public void init(Guild guild) {
+        this.guild = guild;
+        this.input = new SyndFeedInput();
+        if (chan < 0) {
+            this.chan = guild.getDefaultChannel().getIdLong();
+        }
+        this.lastFetch = new Date();
+        setName("RSS-" + guild.getName());
+        start();
+    }
+
+    @Override
     public void kill() {
         close();
-        INSTANCES.remove(chan.getGuild());
     }
 
-    public Map<String, SimpleEntry<SyndFeed, List<Member>>> getFeeds() {
+    public Map<String, List<Long>> getFeeds() {
         return feeds;
     }
 
@@ -106,35 +103,33 @@ public class RssWrk extends ExtendedThread {
     }
 
     public void setChan(TextChannel chan) {
-        this.chan = chan;
+        this.chan = chan.getIdLong();
     }
 
     public TextChannel getChan() {
-        return chan;
+        return guild.getTextChannelById(chan);
     }
 
     public boolean addFeed(String address, Member member) {
-        try {
-            URL url = new URL(address);
-            SyndFeed feed = input.build(new XmlReader(url));
-            feed.setUri(address);
-            if (feeds.containsKey(address)) {
-                feeds.get(address).getValue().add(member);
-            } else {
-                ArrayList<Member> list = new ArrayList<>();
-                list.add(member);
-                feeds.put(address, new SimpleEntry<>(feed, list));
-            }
-            return true;
-        } catch (IOException | FeedException ex) {
+        SyndFeed feed = createFeed(address);
+        if (feed == null) {
+            return false;
         }
-        return false;
+        feed.setUri(address);
+        if (feeds.containsKey(address)) {
+            feeds.get(address).add(member.getUser().getIdLong());
+        } else {
+            ArrayList<Long> list = new ArrayList<>();
+            list.add(member.getUser().getIdLong());
+            feeds.put(address, list);
+        }
+        return true;
     }
 
     public boolean removeFeed(String address, Member member) {
         if (feeds.containsKey(address)) {
-            boolean res = feeds.get(address).getValue().remove(member);
-            if (feeds.get(address).getValue().isEmpty()) {
+            boolean res = feeds.get(address).remove(member.getUser().getIdLong());
+            if (feeds.get(address).isEmpty()) {
                 feeds.remove(address);
             }
             return res;
@@ -149,13 +144,12 @@ public class RssWrk extends ExtendedThread {
     private void fetch() {
         feeds.forEach((key, value) -> {
             try {
-                URL url = new URL(key);
-                SyndFeed feed = input.build(new XmlReader(url));
+                SyndFeed feed = createFeed(key);
                 feed.setUri(key);
                 for (Object feedEntry : feed.getEntries()) {
                     SyndEntryImpl se = (SyndEntryImpl) feedEntry;
                     if (se.getPublishedDate().after(lastFetch) && !se.getPublishedDate().after(new Date())) {
-                        writeMessageForEntry(se, value.getValue());
+                        writeMessageForEntry(se, value);
                     }
                 }
             } catch (Exception ex) {
@@ -164,7 +158,7 @@ public class RssWrk extends ExtendedThread {
         });
     }
 
-    private void writeMessageForEntry(SyndEntryImpl se, List<Member> subs) {
+    private void writeMessageForEntry(SyndEntryImpl se, List<Long> subs) {
         EmbedBuilder builder = new EmbedBuilder();
         builder.setTitle(se.getTitle(), se.getUri())
                 .setAuthor(se.getAuthor())
@@ -173,17 +167,19 @@ public class RssWrk extends ExtendedThread {
             builder.addField(elem.getName(), elem.getText(), true);
         }
         MessageBuilder msgBuilder = new MessageBuilder(builder);
-        for (Member sub : subs) {
-            msgBuilder.append(sub);
+        for (Long sub : subs) {
+            msgBuilder.append(guild.getMemberById(sub));
         }
-        chan.sendMessage(msgBuilder.build()).queue();
+        getChan().sendMessage(msgBuilder.build()).queue();
     }
 
     public boolean search(Member member, TextChannel channel) {
         ArrayList<SyndFeed> list = new ArrayList<>();
         feeds.forEach((key, value) -> {
-            if (!value.getValue().contains(member)) {
-                list.add(value.getKey());
+            if (!value.contains(member.getUser().getIdLong())) {
+                SyndFeed feed = createFeed(key);
+                feed.setUri(key);
+                list.add(feed);
             }
         });
         if (list.isEmpty()) {
@@ -202,8 +198,10 @@ public class RssWrk extends ExtendedThread {
     public boolean searchRemove(Member member, TextChannel channel) {
         ArrayList<SyndFeed> list = new ArrayList<>();
         feeds.forEach((key, value) -> {
-            if (value.getValue().contains(member)) {
-                list.add(value.getKey());
+            if (value.contains(member.getUser().getIdLong())) {
+                SyndFeed feed = createFeed(key);
+                feed.setUri(key);
+                list.add(feed);
             }
         });
         if (list.isEmpty()) {
@@ -220,7 +218,11 @@ public class RssWrk extends ExtendedThread {
 
     public boolean searchDelete(Member member, TextChannel channel) {
         ArrayList<SyndFeed> list = new ArrayList<>();
-        feeds.forEach((key, value) -> list.add(value.getKey()));
+        feeds.forEach((key, value) -> {
+            SyndFeed feed = createFeed(key);
+            feed.setUri(key);
+            list.add(feed);
+        });
         if (list.isEmpty()) {
             return false;
         }
@@ -233,33 +235,21 @@ public class RssWrk extends ExtendedThread {
         return true;
     }
 
-    public static HashMap<Long, HashMap<String, ArrayList<Long>>> serialize() {
-        HashMap<Long, HashMap<String, ArrayList<Long>>> res = new HashMap<>();
-        INSTANCES.forEach((guild, rss) -> {
-            HashMap<String, ArrayList<Long>> map = new HashMap<>();
-            res.put(rss.chan.getIdLong(), map);
-            rss.getFeeds().forEach((feedUrl, value) -> {
-                map.put(feedUrl, new ArrayList<>());
-                value.getValue().forEach((member) -> {
-                    map.get(feedUrl).add(member.getUser().getIdLong());
-                });
-            });
+    public Map<String, Boolean> listFeeds(Member member) {
+        Map<String, Boolean> res = new HashMap();
+        feeds.forEach((key, value) -> {
+            res.put(createFeed(key).getTitle(), value.contains(member.getUser().getIdLong()));
         });
         return res;
     }
 
-    public static void unserialize(JDA jda, HashMap<Long, HashMap<String, ArrayList<Long>>> map) {
-        map.forEach((chanID, value) -> {
-            TextChannel chan = jda.getTextChannelById(chanID);
-            Guild guild = chan.getGuild();
-            RssWrk rss = getInstance(guild);
-            rss.setChan(chan);
-            value.forEach((feedUrl, members) -> {
-                for (Long memberID : members) {
-                    Member member = guild.getMemberById(memberID);
-                    rss.addFeed(feedUrl, member);
-                }
-            });
-        });
+    private SyndFeed createFeed(String address) {
+        try {
+            URL url = new URL(address);
+            return input.build(new XmlReader(url));
+        } catch (IOException | FeedException ex) {
+            Logger.getLogger(RssWrk.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

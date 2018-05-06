@@ -31,13 +31,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.Serializable;
 import java.util.Timer;
 import java.util.TimerTask;
 import net.dv8tion.jda.core.JDA;
 import noukkisBot.helpers.Help;
-import noukkisBot.wrks.rss.RssWrk;
+import noukkisBot.wrks.GuildontonManager;
 
 /**
  *
@@ -69,11 +68,11 @@ public class AutoBackup extends TimerTask {
     }
 
     public void backupNow() {
-        HashMap<Long, HashMap<String, ArrayList<Long>>> feeds = RssWrk.serialize();
+        Serializable serial = GuildontonManager.getInstance().getMap();
         ObjectOutputStream out = null;
         try {
             out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-            out.writeObject(feeds);
+            out.writeObject(serial);
             out.flush();
             Help.LOGGER.info("Backup successful");
         } catch (IOException ex) {
@@ -93,9 +92,8 @@ public class AutoBackup extends TimerTask {
             ObjectInputStream in = null;
             try {
                 in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)));
-                HashMap<Long, HashMap<String, ArrayList<Long>>> feeds = (HashMap) in.readObject();
-                RssWrk.unserialize(jda, feeds);
-                return true;
+                Serializable serial = (Serializable) in.readObject();
+                return GuildontonManager.unserialize(jda, serial);
             } catch (Exception ex) {
                 Help.LOGGER.error("Unloadable Backup file", ex);
             } finally {

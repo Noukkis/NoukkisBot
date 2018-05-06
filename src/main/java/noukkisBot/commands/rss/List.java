@@ -26,11 +26,9 @@ package noukkisBot.commands.rss;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import com.sun.syndication.feed.synd.SyndFeed;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.entities.Member;
+import noukkisBot.wrks.GuildontonManager;
 import noukkisBot.wrks.rss.RssWrk;
 
 /**
@@ -47,16 +45,14 @@ public class List extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-        Map<String, SimpleEntry<SyndFeed, java.util.List<Member>>>  feeds = RssWrk.getInstance(event.getGuild()).getFeeds();
+        RssWrk rss = GuildontonManager.getInstance().getGuildonton(event.getGuild(), RssWrk.class);
+        Map<String, Boolean> feeds = rss.listFeeds(event.getMember());
         int i = 1;
         MessageBuilder builder = new MessageBuilder("RSS Feeds List :\n");
         String content = "";
-        for (Map.Entry<String, SimpleEntry<SyndFeed, java.util.List<Member>>> entry : feeds.entrySet()) {
-            String address = entry.getKey();
-            String format = entry.getValue().getValue().contains(event.getMember())
-                    ? "+" : "-";
-            SyndFeed feed = entry.getValue().getKey();
-            content += "\n" + format + "    " + i + ". " + feed.getTitle();
+        for (Map.Entry<String, Boolean> entry : feeds.entrySet()) {
+            String format = entry.getValue() ? "+" : "-";
+            content += "\n" + format + "    " + i + ". " + entry.getKey();
             i++;
         }
         builder.appendCodeBlock(content, "diff");

@@ -26,6 +26,7 @@ package noukkisBot.commands.rss;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.Command.Category;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
+import noukkisBot.wrks.GuildontonManager;
 import noukkisBot.wrks.rss.RssWrk;
 
 /**
@@ -42,7 +43,7 @@ public class Rss extends Command {
 
     @Override
     protected void execute(CommandEvent event) {
-        RssWrk rss = RssWrk.getInstance(event.getGuild());
+        RssWrk rss = GuildontonManager.getInstance().getGuildonton(event.getGuild(), RssWrk.class);
         rss.setChan(event.getTextChannel());
         event.reactSuccess();
     }
