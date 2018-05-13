@@ -106,6 +106,19 @@ public class GuildontonManager implements EventListener {
         }
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        map.forEach((guildID, ctim) -> {
+            builder.append("\n\nGuild : ").append(guildID);
+            ctim.forEach((c, instance) -> {
+                builder.append("\nClass : ").append(c.getName())
+                        .append("\n").append(instance);
+            });
+        });
+        return builder.toString();
+    }
+
     public HashMap<Long, ClassToInstanceMap<Guildonton>> getMap() {
         return map;
     }

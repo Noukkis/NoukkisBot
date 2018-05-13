@@ -57,6 +57,7 @@ import java.util.TimerTask;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.entities.Message;
@@ -237,5 +238,11 @@ public class Help {
         } catch (UnsupportedEncodingException ex) {
             return null;
         }
+    }
+    
+    public static void sendToOwner(String msg, JDA jda) {
+        jda.getUserById(OWNER_ID).openPrivateChannel().queue((chan) -> {
+            chan.sendMessage(msg).queue();
+        });
     }
 }

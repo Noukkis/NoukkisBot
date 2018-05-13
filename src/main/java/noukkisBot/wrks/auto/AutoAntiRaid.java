@@ -48,7 +48,7 @@ public class AutoAntiRaid implements GuildontonManager.Guildonton {
 
     private final static long WAITING_TIME = 1000 * 60 * 1;
     private final static long ALERT_TIME = 1000 * 60 * 1;
-    private final static long TOO_MUCH_MEMBERS = 1;
+    private final static long TOO_MUCH_MEMBERS = 4;
 
     private Long staffRole;
     private Set<Long> newMembers;

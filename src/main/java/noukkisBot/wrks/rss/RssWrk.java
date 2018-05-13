@@ -23,6 +23,7 @@
  */
 package noukkisBot.wrks.rss;
 
+import com.google.common.collect.Sets;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.io.FeedException;
@@ -31,21 +32,20 @@ import com.sun.syndication.io.XmlReader;
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
-import noukkisBot.helpers.ExtendedThread;
 import noukkisBot.helpers.Help;
 import noukkisBot.helpers.SearchResult;
 import noukkisBot.wrks.GuildontonManager.Guildonton;
@@ -55,9 +55,12 @@ import org.jdom.Element;
  *
  * @author Noukkis
  */
-public class RssWrk extends ExtendedThread implements Guildonton {
+public class RssWrk implements Guildonton {
 
-    private static final int SLEEP = 1000 * 3;
+    private static final int PERIOD = 1000 * 60 * 3;
+    
+    private static final long serialVersionUID = 6073680585703696045L;
+
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
     private final Map<String, List<Long>> feeds;
@@ -67,9 +70,10 @@ public class RssWrk extends ExtendedThread implements Guildonton {
     private transient Date lastFetch;
     private transient Guild guild;
     private transient SyndFeedInput input;
+    private transient Set<String> bans;
+    private transient Timer timer;
 
     public RssWrk() {
-        super(SLEEP);
         this.feeds = new ConcurrentHashMap<>();
         this.chan = -1;
     }
@@ -82,20 +86,25 @@ public class RssWrk extends ExtendedThread implements Guildonton {
             this.chan = guild.getDefaultChannel().getIdLong();
         }
         this.lastFetch = new Date();
-        setName("RSS-" + guild.getName());
-        start();
+        this.bans = Sets.newConcurrentHashSet();
+        this.timer = new Timer("RSS-" + guild.getName());
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                execute();
+            }
+        }, 5000, PERIOD);
     }
 
     @Override
     public void kill() {
-        close();
+        timer.cancel();
     }
 
     public Map<String, List<Long>> getFeeds() {
         return feeds;
     }
 
-    @Override
     public void execute() {
         Date now = new Date();
         fetch();
@@ -143,8 +152,8 @@ public class RssWrk extends ExtendedThread implements Guildonton {
 
     private void fetch() {
         feeds.forEach((key, value) -> {
-            try {
-                SyndFeed feed = createFeed(key);
+            SyndFeed feed = createFeed(key);
+            if (feed != null) {
                 feed.setUri(key);
                 for (Object feedEntry : feed.getEntries()) {
                     SyndEntryImpl se = (SyndEntryImpl) feedEntry;
@@ -152,8 +161,13 @@ public class RssWrk extends ExtendedThread implements Guildonton {
                         writeMessageForEntry(se, value);
                     }
                 }
-            } catch (Exception ex) {
-                Help.LOGGER.error("Error fetching " + key, ex);
+                if(bans.contains(key)) {
+                    bans.remove(key);
+                    Help.sendToOwner("Can now open feed : " + key + " again", guild.getJDA());
+                }
+            } else if (!bans.contains(key)) {
+                bans.add(key);
+                Help.sendToOwner("Cannot open feed : " + key, guild.getJDA());
             }
         });
     }
@@ -248,8 +262,14 @@ public class RssWrk extends ExtendedThread implements Guildonton {
             URL url = new URL(address);
             return input.build(new XmlReader(url));
         } catch (IOException | FeedException ex) {
-            Logger.getLogger(RssWrk.class.getName()).log(Level.SEVERE, null, ex);
+            Help.LOGGER.error("Error fetching " + address, ex);
         }
         return null;
     }
+
+    @Override
+    public String toString() {
+        return  "Channel : " + guild.getTextChannelById(chan) + "\n" + feeds.keySet();
+    }
+    
 }
