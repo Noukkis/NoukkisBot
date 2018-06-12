@@ -21,12 +21,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package noukkisBot.wrks.link;
+package noukkisBot.commands.moderation;
+
+import com.jagrosh.jdautilities.commandclient.Command;
+import com.jagrosh.jdautilities.commandclient.CommandEvent;
+import net.dv8tion.jda.core.Permission;
+import noukkisBot.wrks.GuildontonManager;
+import noukkisBot.wrks.auto.AutoSas;
 
 /**
  *
  * @author Noukkis
  */
-interface AudioendHandler {
-    
+public class Sas extends Command {
+
+    public Sas() {
+        this.name = "sas";
+        this.help = "Create a SAS";
+        this.arguments = "<Role to give>";
+        this.category = new Command.Category("Moderation");
+        this.userPermissions = new Permission[]{Permission.ADMINISTRATOR};
+    }
+
+    @Override
+    protected void execute(CommandEvent event) {
+        AutoSas autoSas = GuildontonManager.getInstance().getGuildonton(event.getGuild(), AutoSas.class);
+        if (!event.getMessage().getMentionedRoles().isEmpty()) {
+            autoSas.setChan(event.getTextChannel());
+            autoSas.setRole(event.getMessage().getMentionedRoles().get(0));
+            event.reactSuccess();
+        } else {
+            event.reactError();
+        }
+    }
+
 }

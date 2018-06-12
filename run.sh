@@ -1,8 +1,8 @@
-restartcode="15"
+restartcode="1337"
 exitcode="$restartcode"
 while [ $exitcode = $restartcode ]; do
-	rm run/noukkisBot.jar
-	cp build/libs/noukkisBot.jar run/noukkisBot.jar
-	java -jar run/noukkisBot.jar
+	rm run-noukkisBot.jar
+	cp noukkisBot.jar run-noukkisBot.jar
+	java -cp noukkisBot.jar:lib/* noukkisBot.Main
 	exitcode=$?
 done

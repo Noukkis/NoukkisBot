@@ -23,6 +23,7 @@
  */
 package noukkisBot.wrks.rss;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
@@ -40,7 +41,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
@@ -57,13 +57,14 @@ import org.jdom.Element;
  */
 public class RssWrk implements Guildonton {
 
-    private static final int PERIOD = 1000 * 60 * 3;
-    
+    private static final int PERIOD = 1000 * 60 * 2;
+
     private static final long serialVersionUID = 6073680585703696045L;
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy HH:mm");
 
     private final Map<String, List<Long>> feeds;
+    private final Map<String, String> feedsTitle;
 
     private long chan;
 
@@ -74,7 +75,8 @@ public class RssWrk implements Guildonton {
     private transient Timer timer;
 
     public RssWrk() {
-        this.feeds = new ConcurrentHashMap<>();
+        this.feeds = Maps.newConcurrentMap();
+        this.feedsTitle = Maps.newConcurrentMap();
         this.chan = -1;
     }
 
@@ -131,6 +133,7 @@ public class RssWrk implements Guildonton {
             ArrayList<Long> list = new ArrayList<>();
             list.add(member.getUser().getIdLong());
             feeds.put(address, list);
+            feedsTitle.put(address, feed.getTitle());
         }
         return true;
     }
@@ -139,7 +142,7 @@ public class RssWrk implements Guildonton {
         if (feeds.containsKey(address)) {
             boolean res = feeds.get(address).remove(member.getUser().getIdLong());
             if (feeds.get(address).isEmpty()) {
-                feeds.remove(address);
+                deleteFeed(address);
             }
             return res;
         }
@@ -147,6 +150,7 @@ public class RssWrk implements Guildonton {
     }
 
     public boolean deleteFeed(String address) {
+        feedsTitle.remove(address);
         return feeds.remove(address) != null;
     }
 
@@ -155,19 +159,20 @@ public class RssWrk implements Guildonton {
             SyndFeed feed = createFeed(key);
             if (feed != null) {
                 feed.setUri(key);
+                feedsTitle.put(key, feed.getTitle());
                 for (Object feedEntry : feed.getEntries()) {
                     SyndEntryImpl se = (SyndEntryImpl) feedEntry;
                     if (se.getPublishedDate().after(lastFetch) && !se.getPublishedDate().after(new Date())) {
                         writeMessageForEntry(se, value);
                     }
                 }
-                if(bans.contains(key)) {
+                if (bans.contains(key)) {
                     bans.remove(key);
-                    Help.sendToOwner("Can now open feed : " + key + " again", guild.getJDA());
+//                    Help.sendToOwner("Can now open feed : " + key + " again", guild.getJDA());
                 }
             } else if (!bans.contains(key)) {
                 bans.add(key);
-                Help.sendToOwner("Cannot open feed : " + key, guild.getJDA());
+//                Help.sendToOwner("Cannot open feed : " + key, guild.getJDA());
             }
         });
     }
@@ -188,63 +193,57 @@ public class RssWrk implements Guildonton {
     }
 
     public boolean search(Member member, TextChannel channel) {
-        ArrayList<SyndFeed> list = new ArrayList<>();
+        ArrayList<String> list = new ArrayList<>();
         feeds.forEach((key, value) -> {
             if (!value.contains(member.getUser().getIdLong())) {
-                SyndFeed feed = createFeed(key);
-                feed.setUri(key);
-                list.add(feed);
+                list.add(key);
             }
         });
         if (list.isEmpty()) {
             return false;
         }
 
-        SearchResult<SyndFeed> sr = new SearchResult<>(channel, member, list, (selected) -> {
-            addFeed(selected.getUri(), member);
+        SearchResult<String> sr = new SearchResult<>(channel, member, list, (selected) -> {
+            addFeed(selected, member);
         });
         sr.setTitle("**Available Feeds**");
-        sr.setLineMaker((feed) -> feed.getTitle());
+        sr.setLineMaker((address) -> feedsTitle.get(address));
         sr.start();
         return true;
     }
 
     public boolean searchRemove(Member member, TextChannel channel) {
-        ArrayList<SyndFeed> list = new ArrayList<>();
+        ArrayList<String> list = new ArrayList<>();
         feeds.forEach((key, value) -> {
             if (value.contains(member.getUser().getIdLong())) {
-                SyndFeed feed = createFeed(key);
-                feed.setUri(key);
-                list.add(feed);
+                list.add(key);
             }
         });
         if (list.isEmpty()) {
             return false;
         }
-        SearchResult<SyndFeed> sr = new SearchResult<>(channel, member, list, (selected) -> {
-            removeFeed(selected.getUri(), member);
+        SearchResult<String> sr = new SearchResult<>(channel, member, list, (selected) -> {
+            removeFeed(selected, member);
         });
         sr.setTitle("**Removable Feeds**");
-        sr.setLineMaker((feed) -> feed.getTitle());
+        sr.setLineMaker((address) -> feedsTitle.get(address));
         sr.start();
         return true;
     }
 
     public boolean searchDelete(Member member, TextChannel channel) {
-        ArrayList<SyndFeed> list = new ArrayList<>();
+        ArrayList<String> list = new ArrayList<>();
         feeds.forEach((key, value) -> {
-            SyndFeed feed = createFeed(key);
-            feed.setUri(key);
-            list.add(feed);
+            list.add(key);
         });
         if (list.isEmpty()) {
             return false;
         }
-        SearchResult<SyndFeed> sr = new SearchResult<>(channel, member, list, (selected) -> {
-            deleteFeed(selected.getUri());
+        SearchResult<String> sr = new SearchResult<>(channel, member, list, (selected) -> {
+            deleteFeed(selected);
         });
         sr.setTitle("**Deletable Feeds**");
-        sr.setLineMaker((feed) -> feed.getTitle());
+        sr.setLineMaker((address) -> feedsTitle.get(address));
         sr.start();
         return true;
     }
@@ -269,7 +268,7 @@ public class RssWrk implements Guildonton {
 
     @Override
     public String toString() {
-        return  "Channel : " + guild.getTextChannelById(chan) + "\n" + feeds.keySet();
+        return "Channel : " + guild.getTextChannelById(chan) + "\n" + feeds.keySet();
     }
-    
+
 }

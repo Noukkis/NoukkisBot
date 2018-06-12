@@ -30,7 +30,6 @@ import java.util.function.Function;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
 import noukkisBot.wrks.ReactButtonsMaker;
 import noukkisBot.wrks.ReactButtonsMaker.Blocker;
 

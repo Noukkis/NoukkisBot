@@ -23,8 +23,11 @@
  */
 package noukkisBot.wrks;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.MutableClassToInstanceMap;
+import com.google.gson.GsonBuilder;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -108,15 +111,7 @@ public class GuildontonManager implements EventListener {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        map.forEach((guildID, ctim) -> {
-            builder.append("\n\nGuild : ").append(guildID);
-            ctim.forEach((c, instance) -> {
-                builder.append("\nClass : ").append(c.getName())
-                        .append("\n").append(instance);
-            });
-        });
-        return builder.toString();
+        return new GsonBuilder().setPrettyPrinting().create().toJson(map);
     }
 
     public HashMap<Long, ClassToInstanceMap<Guildonton>> getMap() {

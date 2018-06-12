@@ -25,12 +25,13 @@ package noukkisBot.commands.owner;
 
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
-import noukkisBot.Main;
+import net.dv8tion.jda.core.events.Event;
+import net.dv8tion.jda.core.events.ShutdownEvent;
+import net.dv8tion.jda.core.hooks.EventListener;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.GuildontonManager;
 import noukkisBot.wrks.contest.ContestWrk;
 import noukkisBot.wrks.music.MusicWrk;
-import noukkisBot.wrks.rss.RssWrk;
 
 /**
  *
@@ -57,10 +58,14 @@ public class Kill extends Command {
         GuildontonManager.getInstance().killAll();
         boolean restart = event.getMessage().getContentRaw().contains("r");
         event.replySuccess(restart ? "Bot will restart" : "Bot shut down");
-        event.getJDA().shutdown();
         if (restart) {
-            Main.launch();
+            event.getJDA().addEventListener((EventListener) (Event e) -> {
+                if (e instanceof ShutdownEvent) {
+                    System.exit(Help.RESTART_STATUS);
+                }
+            });
         }
+        event.getJDA().shutdown();
     }
 
 }

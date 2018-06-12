@@ -30,6 +30,8 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
+import net.dv8tion.jda.core.events.Event;
+import net.dv8tion.jda.core.hooks.EventListener;
 import noukkisBot.autoresponses.AutoResponseManager;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.GuildontonManager;
@@ -44,8 +46,8 @@ public class Main {
     public static void main(String[] args) throws Exception {
         launch();
     }
-    
-    private final static int BACKUP_TIME = 1000*60*60;
+
+    private final static int BACKUP_TIME = 1000 * 60 * 60;
 
     public static void launch() {
         try {
@@ -69,7 +71,7 @@ public class Main {
             Help.BACKUP = new AutoBackup(jda, Help.BACKUP_FILE);
             Help.LOGGER.info(Help.BACKUP.recover() ? "Backup loaded" : "Can't load Backup");
             Help.BACKUP.scheduleBackup(BACKUP_TIME);
-            Help.LOGGER.info("Backups scheduled every " + (BACKUP_TIME/1000) + " seconds");
+            Help.LOGGER.info("Backups scheduled every " + (BACKUP_TIME / 1000) + " seconds");
         } catch (IOException | LoginException | InterruptedException ex) {
             Help.LOGGER.error("Cannot launch the bot", ex);
         }
