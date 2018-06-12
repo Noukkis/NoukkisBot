@@ -88,8 +88,8 @@ public class ContestWrk {
     }
 
     public void start(Member sender) {
-        rbm.add(configMsg, Help.YES_REACT, (event) -> start(true, sender));
-        rbm.add(configMsg, Help.NO_REACT, (event) -> start(false, sender));
+        rbm.add(configMsg, Help.EMOJI_YES, (event) -> start(true, sender));
+        rbm.add(configMsg, Help.EMOJI_NO, (event) -> start(false, sender));
     }
 
     private void start(boolean participate, Member sender) {

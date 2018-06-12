@@ -109,10 +109,10 @@ public class AutoAntiRaid implements GuildontonManager.Guildonton {
         if (perm) {
             guild.getDefaultChannel().sendMessage("Beware " + getStaff().getAsMention() + ", I suspect a RAID !!!\nDo I take care of it ?").queue((msg) -> {
                 Blocker blocker = Blocker.from(getStaff());
-                ReactButtonsMaker.getInstance().add(msg, Help.YES_REACT, blocker, (event) -> {
+                ReactButtonsMaker.getInstance().add(msg, Help.EMOJI_YES, blocker, (event) -> {
                     alertTime(msg);
                 });
-                ReactButtonsMaker.getInstance().add(msg, Help.NO_REACT, blocker, (event) -> {
+                ReactButtonsMaker.getInstance().add(msg, Help.EMOJI_NO, blocker, (event) -> {
                     msg.delete().queue();
                 });
             });

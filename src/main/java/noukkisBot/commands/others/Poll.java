@@ -66,8 +66,8 @@ public class Poll extends Command {
                 });
             } else {
                 event.reply(reply, (msg) -> {
-                    msg.addReaction(Help.YES_REACT).queue();
-                    msg.addReaction(Help.NO_REACT).queue();
+                    msg.addReaction(Help.EMOJI_YES).queue();
+                    msg.addReaction(Help.EMOJI_NO).queue();
                 });
             }
 

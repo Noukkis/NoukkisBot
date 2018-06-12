@@ -81,8 +81,11 @@ public class Help {
     public final static Logger LOGGER = LoggerFactory.getLogger(Help.class);
     public final static File BACKUP_FILE = new File("data.bak");
     public final static int RESTART_STATUS = 1;
-    public final static String YES_REACT = "\uD83D\uDC4D";
-    public final static String NO_REACT = "\uD83D\uDC4E";
+    public final static String EMOJI_YES = "\uD83D\uDC4D";
+    public final static String EMOJI_NO = "\uD83D\uDC4E";
+    public final static String EMOJI_SUCCESS = "\u2705";
+    public final static String EMOJI_WARNING = "\u26A0";
+    public final static String EMOJI_ERROR = "\u274C";
     public final static String[] NUMBERS_REACTS = {"0\u20E3", "1\u20E3", "2\u20E3",
         "3\u20E3", "4\u20E3", "5\u20E3", "6\u20E3", "7\u20E3", "8\u20E3",
         "9\u20E3", "\uD83D\uDD1F"};

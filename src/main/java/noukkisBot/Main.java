@@ -30,8 +30,6 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.hooks.EventListener;
 import noukkisBot.autoresponses.AutoResponseManager;
 import noukkisBot.helpers.Help;
 import noukkisBot.wrks.GuildontonManager;
@@ -56,7 +54,7 @@ public class Main {
             arm.init();
             CommandClientBuilder ccb = new CommandClientBuilder()
                     .setOwnerId(Help.OWNER_ID)
-                    .setEmojis("\u2705", "\u26A0", "\u274C")
+                    .setEmojis(Help.EMOJI_SUCCESS, Help.EMOJI_WARNING, Help.EMOJI_ERROR)
                     .setPrefix("-");
             Help.setCommands(ccb);
             Help.setHelp(ccb);
