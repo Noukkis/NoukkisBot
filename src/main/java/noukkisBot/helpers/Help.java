@@ -79,7 +79,7 @@ public class Help {
     private final static Properties PROPS = new Properties();
 
     public final static Logger LOGGER = LoggerFactory.getLogger(Help.class);
-    public final static File BACKUP_FILE = new File("data.bak");
+    public final static File BACKUP_FILE = new File("save.json");
     public final static int RESTART_STATUS = 1;
     public final static String EMOJI_YES = "\uD83D\uDC4D";
     public final static String EMOJI_NO = "\uD83D\uDC4E";

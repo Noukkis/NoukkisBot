@@ -1,0 +1,19 @@
+{
+  "455770281139503104": {
+    "noukkisBot.wrks.auto.AutoSas": {
+      "roleID": 455771107694346261,
+      "chanID": 455776492140363786
+    },
+    "noukkisBot.helpers.GuildValues": {
+      "autoRole": {
+        ":ryancry:": 458335520490258432,
+        ":ryanhiri:": 458335403301404672,
+        ":ryanheart:": 458335560591999006,
+        ":ryanmoney:": 458335370736697364,
+        ":ryansoumis:": 458335496842641411,
+        ":peeporyan:": 458335637356019714,
+        ":ryanorgueil:": 458335597967441941
+      }
+    }
+  }
+}

@@ -42,7 +42,7 @@ public class Kill extends Command {
     public Kill() {
         this.name = "kill";
         this.category = new Category("Owner-only");
-        this.aliases = new String[]{"k", "restart", "r"};
+        this.aliases = new String[]{"s", "restart", "r"};
         this.help = "Kill or restart this bot";
         this.guildOnly = false;
         this.ownerCommand = true;

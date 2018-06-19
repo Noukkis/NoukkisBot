@@ -47,6 +47,10 @@ public class AutoSas implements Guildonton {
     private transient Guild guild;
     private transient ReactButtonsMaker rbm;
 
+    public AutoSas() {
+    }
+
+    
     @Override
     public void init(Guild guild) {
         this.guild = guild;

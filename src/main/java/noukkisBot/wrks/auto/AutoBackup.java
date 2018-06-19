@@ -23,19 +23,21 @@
  */
 package noukkisBot.wrks.auto;
 
+import com.google.common.collect.ClassToInstanceMap;
+import com.google.common.io.Files;
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 import net.dv8tion.jda.core.JDA;
 import noukkisBot.helpers.Help;
+import noukkisBot.helpers.Jsonifier;
 import noukkisBot.wrks.GuildontonManager;
 
 /**
@@ -47,11 +49,13 @@ public class AutoBackup extends TimerTask {
     private final JDA jda;
     private final File file;
     private final Timer timer;
+    private final Jsonifier jsonifier;
 
     public AutoBackup(JDA jda, File file) {
         this.jda = jda;
         this.file = file;
         this.timer = new Timer("AutoBackup");
+        this.jsonifier = new Jsonifier();
     }
 
     public void scheduleBackup(long time) {
@@ -67,12 +71,31 @@ public class AutoBackup extends TimerTask {
         backupNow();
     }
 
+//    public void backupNow() {
+//        Serializable serial = GuildontonManager.getInstance().getMap();
+//        ObjectOutputStream out = null;
+//        try {
+//            out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+//            out.writeObject(serial);
+//            out.flush();
+//            Help.LOGGER.info("Backup successful");
+//        } catch (IOException ex) {
+//            Help.LOGGER.error("Can't Backup", ex);
+//        } finally {
+//            if (out != null) {
+//                try {
+//                    out.close();
+//                } catch (IOException ex) {
+//                }
+//            }
+//        }
+//    }
     public void backupNow() {
-        Serializable serial = GuildontonManager.getInstance().getMap();
-        ObjectOutputStream out = null;
+        String json = jsonifier.toJson(GuildontonManager.getInstance().getMap());
+        BufferedWriter out = null;
         try {
-            out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-            out.writeObject(serial);
+            out = Files.newWriter(file, Charset.forName("UTF-8"));
+            out.write(json);
             out.flush();
             Help.LOGGER.info("Backup successful");
         } catch (IOException ex) {
@@ -87,22 +110,34 @@ public class AutoBackup extends TimerTask {
         }
     }
 
+//    public boolean recover() {
+//        if (file.exists() && file.isFile()) {
+//            ObjectInputStream in = null;
+//            try {
+//                in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)));
+//                HashMap<Long, ClassToInstanceMap<GuildontonManager.Guildonton>> serial = (HashMap) in.readObject();
+//                return GuildontonManager.unserialize(jda, serial);
+//            } catch (Exception ex) {
+//                Help.LOGGER.error("Unloadable Backup file", ex);
+//            } finally {
+//                if (in != null) {
+//                    try {
+//                        in.close();
+//                    } catch (IOException ex) {
+//                    }
+//                }
+//            }
+//        }
+//        return false;
+//    }
+    
     public boolean recover() {
         if (file.exists() && file.isFile()) {
-            ObjectInputStream in = null;
             try {
-                in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)));
-                Serializable serial = (Serializable) in.readObject();
-                return GuildontonManager.unserialize(jda, serial);
+                String json = Files.asCharSource(file, Charset.forName("UTF-8")).read();
+                return GuildontonManager.unserialize(jda, jsonifier.fromJson(json));
             } catch (Exception ex) {
                 Help.LOGGER.error("Unloadable Backup file", ex);
-            } finally {
-                if (in != null) {
-                    try {
-                        in.close();
-                    } catch (IOException ex) {
-                    }
-                }
             }
         }
         return false;

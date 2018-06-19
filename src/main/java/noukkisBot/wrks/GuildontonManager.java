@@ -23,8 +23,6 @@
  */
 package noukkisBot.wrks;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.MutableClassToInstanceMap;
 import com.google.gson.GsonBuilder;
@@ -43,9 +41,7 @@ import noukkisBot.helpers.Help;
  */
 public class GuildontonManager implements EventListener {
 
-    public static boolean unserialize(JDA jda, Serializable serial) {
-        if (serial instanceof HashMap) {
-            HashMap<Long, ClassToInstanceMap<Guildonton>> serialMap = (HashMap<Long, ClassToInstanceMap<Guildonton>>) serial;
+    public static boolean unserialize(JDA jda, HashMap<Long, ClassToInstanceMap<Guildonton>> serialMap) {
             serialMap.forEach((guildId, ctim) -> {
                 Guild guild = jda.getGuildById(guildId);
                 if (guild != null) {
@@ -56,8 +52,6 @@ public class GuildontonManager implements EventListener {
                 }
             });
             return true;
-        }
-        return false;
     }
 
     private HashMap<Long, ClassToInstanceMap<Guildonton>> map;
