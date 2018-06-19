@@ -71,25 +71,6 @@ public class AutoBackup extends TimerTask {
         backupNow();
     }
 
-//    public void backupNow() {
-//        Serializable serial = GuildontonManager.getInstance().getMap();
-//        ObjectOutputStream out = null;
-//        try {
-//            out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-//            out.writeObject(serial);
-//            out.flush();
-//            Help.LOGGER.info("Backup successful");
-//        } catch (IOException ex) {
-//            Help.LOGGER.error("Can't Backup", ex);
-//        } finally {
-//            if (out != null) {
-//                try {
-//                    out.close();
-//                } catch (IOException ex) {
-//                }
-//            }
-//        }
-//    }
     public void backupNow() {
         String json = jsonifier.toJson(GuildontonManager.getInstance().getMap());
         BufferedWriter out = null;
@@ -109,27 +90,6 @@ public class AutoBackup extends TimerTask {
             }
         }
     }
-
-//    public boolean recover() {
-//        if (file.exists() && file.isFile()) {
-//            ObjectInputStream in = null;
-//            try {
-//                in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)));
-//                HashMap<Long, ClassToInstanceMap<GuildontonManager.Guildonton>> serial = (HashMap) in.readObject();
-//                return GuildontonManager.unserialize(jda, serial);
-//            } catch (Exception ex) {
-//                Help.LOGGER.error("Unloadable Backup file", ex);
-//            } finally {
-//                if (in != null) {
-//                    try {
-//                        in.close();
-//                    } catch (IOException ex) {
-//                    }
-//                }
-//            }
-//        }
-//        return false;
-//    }
     
     public boolean recover() {
         if (file.exists() && file.isFile()) {
