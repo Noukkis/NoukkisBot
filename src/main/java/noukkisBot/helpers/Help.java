@@ -60,6 +60,7 @@ import javax.json.JsonReader;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.ChannelType;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import noukkisBot.wrks.auto.AutoBackup;
@@ -158,7 +159,7 @@ public class Help {
             msg.getTextChannel().removeReactionById(msg.getIdLong(), emote).queue();
             return emote;
         } catch (Exception ex) {
-            if(!msg.getGuild().getEmotesByName(emote.replace(":", ""), true).isEmpty()) {
+            if (!msg.getGuild().getEmotesByName(emote.replace(":", ""), true).isEmpty()) {
                 return msg.getGuild().getEmotesByName(emote.replace(":", ""), true).get(0).getAsMention();
             }
         }
@@ -260,5 +261,14 @@ public class Help {
         jda.getUserById(OWNER_ID).openPrivateChannel().queue((chan) -> {
             chan.sendMessage(msg).queue();
         });
+    }
+
+    public static String msgID(Message msg) {
+        return msg.getId() + "/" + msg.getTextChannel().getId();
+    }
+
+    public static Message msgID(Guild guild, String id) {
+        String[] arr = id.split("/");
+        return guild.getTextChannelById(arr[1]).getMessageById(arr[0]).complete();
     }
 }

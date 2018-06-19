@@ -23,6 +23,7 @@
  */
 package noukkisBot;
 
+import ch.qos.logback.classic.LoggerContext;
 import com.jagrosh.jdautilities.commandclient.CommandClientBuilder;
 import java.io.IOException;
 import javax.security.auth.login.LoginException;
@@ -32,9 +33,12 @@ import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
 import noukkisBot.autoresponses.AutoResponseManager;
 import noukkisBot.helpers.Help;
+import noukkisBot.logging.DiscordAppender;
 import noukkisBot.wrks.GuildontonManager;
 import noukkisBot.wrks.ReactButtonsMaker;
 import noukkisBot.wrks.auto.AutoBackup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
 
@@ -70,9 +74,14 @@ public class Main {
             Help.LOGGER.info(Help.BACKUP.recover() ? "Backup loaded" : "Can't load Backup");
             Help.BACKUP.scheduleBackup(BACKUP_TIME);
             Help.LOGGER.info("Backups scheduled every " + (BACKUP_TIME / 1000) + " seconds");
+            jda.getUserById(Help.OWNER_ID).openPrivateChannel().queue((chan) -> {
+                LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+                DiscordAppender appender = (DiscordAppender) lc.getLogger(Logger.ROOT_LOGGER_NAME).getAppender("DISCORD");
+                appender.setChan(chan);
+            });
         } catch (IOException | LoginException | InterruptedException ex) {
             Help.LOGGER.error("Cannot launch the bot", ex);
         }
-    }
 
+    }
 }

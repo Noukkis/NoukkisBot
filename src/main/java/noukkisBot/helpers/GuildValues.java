@@ -26,6 +26,7 @@ package noukkisBot.helpers;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.dv8tion.jda.core.entities.Guild;
+import static noukkisBot.commands.moderation.AutoRole.setupMsg;
 import noukkisBot.wrks.GuildontonManager.Guildonton;
 
 /**
@@ -33,27 +34,44 @@ import noukkisBot.wrks.GuildontonManager.Guildonton;
  * @author Noukkis
  */
 public class GuildValues implements Guildonton {
-    
+
     private final Map<String, Long> autoRole;
+    private final Map<String, String> values;
+
+    private transient Guild guild;
+
+    @Override
+    public void kill() {
+    }
 
     public GuildValues() {
         autoRole = new ConcurrentHashMap<>();
-    }
-
-    public GuildValues(Map<String, Long> autoRole) {
-        this.autoRole = autoRole;
+        values = new ConcurrentHashMap<>();
     }
 
     public Map<String, Long> getAutoRole() {
         return autoRole;
     }
-            
-    @Override
-    public void init(Guild guild) {
+
+    public String getValue(String key) {
+        return values.get(key);
+    }
+
+    public void setValue(String key, String value) {
+        values.put(key, value);
     }
 
     @Override
-    public void kill() {
+    public void init(Guild guild) {
+        this.guild = guild;
+        initAutoRole();
+    }
+
+    private void initAutoRole() {
+        String msgID = getValue("autoRoleMsg");
+        if (msgID != null) {
+            setupMsg(Help.msgID(guild, msgID), this);
+        }
     }
 
 }

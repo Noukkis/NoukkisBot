@@ -26,10 +26,13 @@ package noukkisBot.commands.moderation;
 import com.jagrosh.jdautilities.commandclient.Command;
 import com.jagrosh.jdautilities.commandclient.CommandEvent;
 import java.util.function.Consumer;
+import javassist.bytecode.CodeAttribute;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Emote;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
@@ -58,7 +61,7 @@ public class AutoRole extends Command {
         switch (event.getArgs()) {
             case "msg": createMsg(event, val);
                 break;
-            case "list": event.reply(list(event, val).build());
+            case "list": event.reply(list(event.getGuild(), val).build());
                 break;
             default: create(event, val);
                 break;
@@ -66,35 +69,20 @@ public class AutoRole extends Command {
     }
 
     private void createMsg(CommandEvent event, GuildValues val) {
-        event.getChannel().sendMessage(list(event, val).build()).queue((msg) -> {
-            val.getAutoRole().forEach((emote, roleID) -> {
-                Consumer<GenericMessageReactionEvent> consumer = (emoteEvent) -> {
-                    Member member = emoteEvent.getMember();
-                    Role role = event.getGuild().getRoleById(roleID);
-                    if (emoteEvent instanceof MessageReactionAddEvent) {
-                        event.getGuild().getController().addSingleRoleToMember(member, role).queue();
-                    } else {
-                        event.getGuild().getController().removeSingleRoleFromMember(member, role).queue();
-                    }
-                };
-                if (!event.getGuild().getEmotesByName(emote.replace(":", ""), true).isEmpty()) {
-                    Emote em = event.getGuild().getEmotesByName(emote.replace(":", ""), true).get(0);
-                    ReactButtonsMaker.getInstance().add(msg, em, consumer);
-                } else {
-                    ReactButtonsMaker.getInstance().add(msg, emote, consumer);
-                }
-            });
+        event.getChannel().sendMessage(list(event.getGuild(), val).build()).queue((msg) -> {
+            val.setValue("autoRoleMsg", Help.msgID(msg));
+            setupMsg(msg, val);
         });
     }
 
-    private MessageBuilder list(CommandEvent event, GuildValues val) {
+    public static MessageBuilder list(Guild guild, GuildValues val) {
         MessageBuilder msg = new MessageBuilder("AutoRole List :\n-----------------");
         val.getAutoRole().forEach((emote, roleID) -> {
-            if (!event.getGuild().getEmotesByName(emote.replace(":", ""), true).isEmpty()) {
-                emote = event.getGuild().getEmotesByName(emote.replace(":", ""), true).get(0).getAsMention();
+            if (!guild.getEmotesByName(emote.replace(":", ""), true).isEmpty()) {
+                emote = guild.getEmotesByName(emote.replace(":", ""), true).get(0).getAsMention();
             }
             msg.append("\n\n").append(emote).append(" => ")
-                    .append(event.getGuild().getRoleById(roleID));
+                    .append(guild.getRoleById(roleID));
         });
         return msg;
     }
@@ -122,6 +110,32 @@ public class AutoRole extends Command {
         } else {
             event.reactError();
         }
+        String msgID = val.getValue("autoRoleMsg");
+        if(msgID != null) {
+            setupMsg(Help.msgID(event.getGuild(), msgID), val);
+        }
+    }
+
+    public static void setupMsg(Message msg, GuildValues val) {
+        msg.editMessage(list(msg.getGuild(), val).build()).queue();
+        Guild guild = msg.getGuild();
+        val.getAutoRole().forEach((emote, roleID) -> {
+            Consumer<GenericMessageReactionEvent> consumer = (emoteEvent) -> {
+                Member member = emoteEvent.getMember();
+                Role role = guild.getRoleById(roleID);
+                if (emoteEvent instanceof MessageReactionAddEvent) {
+                    guild.getController().addSingleRoleToMember(member, role).queue();
+                } else {
+                    guild.getController().removeSingleRoleFromMember(member, role).queue();
+                }
+            };
+            if (!guild.getEmotesByName(emote.replace(":", ""), true).isEmpty()) {
+                Emote em = guild.getEmotesByName(emote.replace(":", ""), true).get(0);
+                ReactButtonsMaker.getInstance().add(msg, em, consumer);
+            } else {
+                ReactButtonsMaker.getInstance().add(msg, emote, consumer);
+            }
+        });
     }
 
 }
