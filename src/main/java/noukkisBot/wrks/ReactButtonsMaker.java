@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.function.Consumer;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Emote;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.Role;
@@ -55,6 +56,18 @@ public final class ReactButtonsMaker implements EventListener {
 
     private ReactButtonsMaker() {
         map = new HashMap<>();
+    }
+
+    public void add(Message msg, Emote emote, Blocker blocker, Consumer<GenericMessageReactionEvent> consumer) {
+        msg.addReaction(emote).queue();
+        if (!map.containsKey(msg.getId())) {
+            map.put(msg.getId(), new HashMap<>());
+        }
+        map.get(msg.getId()).put(emote.getName(), new SimpleEntry<>(blocker, consumer));
+    }
+
+    public void add(Message msg, Emote emote, Consumer<GenericMessageReactionEvent> consumer) {
+        add(msg, emote, null, consumer);
     }
 
     public void add(Message msg, String name, Blocker blocker, Consumer<GenericMessageReactionEvent> consumer) {

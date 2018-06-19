@@ -126,7 +126,7 @@ public class Help {
             }
         }
         String[] features = {"Cleans Chat", "Makes Polls", "Plays Music", "Manages Contests",
-                            "Fetches RSS feeds", "Some others things"};
+            "Fetches RSS feeds", "Some others things"};
         String description = "a cool [Open Source](https://github.com/Noukkis/NoukkisBot) bot";
         ccb.addCommand(new AboutCommand(Color.YELLOW, description, features, perms.toArray(new Permission[0])));
     }
@@ -150,6 +150,19 @@ public class Help {
         }
         res.put("Others", others);
         return res;
+    }
+
+    public static String getReaction(String emote, Message msg) {
+        try {
+            msg.addReaction(emote).complete();
+            msg.getTextChannel().removeReactionById(msg.getIdLong(), emote).queue();
+            return emote;
+        } catch (Exception ex) {
+            if(!msg.getGuild().getEmotesByName(emote.replace(":", ""), true).isEmpty()) {
+                return msg.getGuild().getEmotesByName(emote.replace(":", ""), true).get(0).getAsMention();
+            }
+        }
+        return null;
     }
 
     public static void setHelp(CommandClientBuilder ccb) {
@@ -242,7 +255,7 @@ public class Help {
             return null;
         }
     }
-    
+
     public static void sendToOwner(String msg, JDA jda) {
         jda.getUserById(OWNER_ID).openPrivateChannel().queue((chan) -> {
             chan.sendMessage(msg).queue();
